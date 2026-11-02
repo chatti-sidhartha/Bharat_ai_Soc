@@ -7,6 +7,7 @@ import com.example.learnedge.domain.Track
 /** A plan item ready for display, shared by the Today and Plan screens. */
 data class StudyItemUi(
     val id: Long,
+    val topicId: String,
     val topicName: String,
     val skillName: String,
     val description: String,
@@ -23,6 +24,7 @@ fun PlanItemEntity.toUi(track: Track, mastery: Map<String, TopicProgress>): Stud
     val topic = if (topicId in track.graph) track.graph.topic(topicId) else null
     return StudyItemUi(
         id = id,
+        topicId = topicId,
         topicName = topic?.name ?: topicId,
         skillName = topic?.let { track.skill(it.skillId).name }.orEmpty(),
         description = topic?.description.orEmpty(),

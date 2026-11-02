@@ -8,6 +8,10 @@ import com.example.learnedge.data.diagnostic.DiagnosticRepository
 import com.example.learnedge.data.learner.LearnerStateRepository
 import com.example.learnedge.data.plan.PlanRepository
 import com.example.learnedge.data.profile.ProfileRepository
+import com.example.learnedge.data.tips.TipsRepository
+import com.example.learnedge.llm.LlmService
+import com.example.learnedge.llm.benchmark.BenchmarkLog
+import com.example.learnedge.llm.benchmark.GenerationRecorder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,7 +28,7 @@ class LearnEdgeApp : Application() {
     }
 }
 
-/** Manual dependency wiring: one database and one instance of each repository for the whole app. */
+/** Manual dependency wiring: one database, one model and one instance of each repository for the whole app. */
 class AppContainer(context: Context) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val database = AppDatabase.build(context)
@@ -33,6 +37,12 @@ class AppContainer(context: Context) {
     val learnerState = LearnerStateRepository(database)
     val diagnostics = DiagnosticRepository(context.assets)
     val plans = PlanRepository(database, curriculum, profiles, learnerState)
+
+    /** Starts loading the default (on-device) model in the background right away. */
+    val llm = LlmService(context.applicationContext, appScope)
+    val benchmarkLog = BenchmarkLog(context)
+    val recorder = GenerationRecorder(context, benchmarkLog)
+    val tips = TipsRepository(database, llm, recorder, appScope)
 }
 
 val Context.appContainer: AppContainer get() = (applicationContext as LearnEdgeApp).container

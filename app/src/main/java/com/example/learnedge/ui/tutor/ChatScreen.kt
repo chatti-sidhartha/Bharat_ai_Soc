@@ -51,6 +51,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.learnedge.llm.EngineKind
+import com.example.learnedge.llm.EngineStatus
 import com.example.learnedge.llm.GenerationStats
 import java.util.Locale
 

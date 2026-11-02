@@ -43,6 +43,8 @@ android {
         // Domain tests are plain JVM tests (app/src/test). Run only them with:
         //   ./gradlew :app:testDebugUnitTest --tests "com.example.learnedge.domain.*"
         unitTests.all { it.systemProperty("projectDir", project.projectDir.absolutePath) }
+        // Lets JVM tests run code that touches android.util.Log / SystemClock (e.g. the Mock engine).
+        unitTests.isReturnDefaultValues = true
     }
 }
 

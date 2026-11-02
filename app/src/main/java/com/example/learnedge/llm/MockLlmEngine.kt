@@ -4,30 +4,43 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
-/** Streams canned text so the UI can be exercised without a model on the device. */
-class MockLlmEngine : LlmEngine {
+/**
+ * Streams canned text so the UI can be exercised without a model on the device. Tests pass
+ * [scriptedReplies] (one per generate call, the last one repeats) and zero delays.
+ */
+class MockLlmEngine(
+    private val scriptedReplies: List<String> = emptyList(),
+    private val loadDelayMs: Long = LOAD_DELAY_MS,
+    private val firstTokenDelayMs: Long = FIRST_TOKEN_DELAY_MS,
+    private val tokenDelayMs: Long = TOKEN_DELAY_MS,
+) : LlmEngine {
     override val name = "Mock"
     override var loadTimeMs: Long? = null
         private set
+
+    /** Prompts received so far, so tests can check what was asked. */
+    val prompts: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
 
     @Volatile private var stopRequested = false
 
     override suspend fun load() {
         if (loadTimeMs != null) return
-        delay(LOAD_DELAY_MS)
-        loadTimeMs = LOAD_DELAY_MS
+        delay(loadDelayMs)
+        loadTimeMs = loadDelayMs
     }
 
     override suspend fun generate(prompt: String, onToken: (String) -> Unit): GenerationStats =
         withContext(Dispatchers.Default) {
             stopRequested = false
+            prompts += prompt
+            val reply = scriptedReplies.getOrNull(prompts.size - 1) ?: scriptedReplies.lastOrNull() ?: CANNED_REPLY
             val tracker = StatsTracker()
-            delay(FIRST_TOKEN_DELAY_MS)
-            for (word in CANNED_REPLY.split(" ")) {
+            delay(firstTokenDelayMs)
+            for (word in reply.split(" ")) {
                 if (stopRequested) break
                 tracker.onToken()
                 onToken("$word ")
-                delay(TOKEN_DELAY_MS)
+                delay(tokenDelayMs)
             }
             tracker.finish()
         }

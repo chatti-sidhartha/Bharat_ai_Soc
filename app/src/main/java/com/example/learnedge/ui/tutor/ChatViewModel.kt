@@ -3,38 +3,25 @@ package com.example.learnedge.ui.tutor
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.learnedge.llm.benchmark.BenchmarkLog
+import com.example.learnedge.appContainer
+import com.example.learnedge.llm.DEFAULT_ENGINE
+import com.example.learnedge.llm.EngineKind
+import com.example.learnedge.llm.EngineStatus
+import com.example.learnedge.llm.GenerationStats
+import com.example.learnedge.llm.LlmException
+import com.example.learnedge.llm.PromptFormat
 import com.example.learnedge.llm.benchmark.BenchmarkPrompts
 import com.example.learnedge.llm.benchmark.BenchmarkRecord
 import com.example.learnedge.llm.benchmark.BenchmarkSummary
-import com.example.learnedge.llm.benchmark.GenerationRecorder
 import com.example.learnedge.llm.benchmark.PromptSummary
-import com.example.learnedge.llm.ExecuTorchLlmEngine
-import com.example.learnedge.llm.GenerationStats
-import com.example.learnedge.llm.LlmEngine
-import com.example.learnedge.llm.LlmException
-import com.example.learnedge.llm.MockLlmEngine
-import com.example.learnedge.llm.ModelConfig
-import com.example.learnedge.llm.OllamaLlmEngine
-import com.example.learnedge.llm.PromptFormat
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-enum class EngineKind(val label: String) {
-    Ollama("Ollama"),
-    OnDevice("On-device"),
-    Mock("Mock"),
-}
-
-sealed interface EngineStatus {
-    data object Loading : EngineStatus
-    data object Ready : EngineStatus
-    data class Failed(val message: String) : EngineStatus
-}
 
 data class ChatMessage(
     val id: Long,
@@ -65,58 +52,27 @@ data class ChatUiState(
     val benchmark: BenchmarkUiState? = null,
 )
 
-/** Ollama on the dev PC is the default local LLM; the other engines stay available from the selector. */
-val DEFAULT_ENGINE = EngineKind.Ollama
-
+/** Chat with the shared engine from [com.example.learnedge.llm.LlmService]. */
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
+    private val container = application.appContainer
+    private val llm = container.llm
     private val _state = MutableStateFlow(ChatUiState())
-    val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
-    private var engine: LlmEngine? = null
+    val state: StateFlow<ChatUiState> = combine(_state, llm.state) { chat, engine ->
+        chat.copy(engineKind = engine.kind, engineStatus = engine.status, loadTimeMs = engine.loadTimeMs)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
+
     private var nextId = 0L
-
-    private val benchmarkLog = BenchmarkLog(application)
-    private val recorder = GenerationRecorder(application, benchmarkLog)
     private var benchmarkJob: Job? = null
-
-    init {
-        selectEngine(DEFAULT_ENGINE)
-    }
 
     fun selectEngine(kind: EngineKind) {
         if (_state.value.isGenerating) return
-        engine?.close()
-        engine = null
-        _state.update { it.copy(engineKind = kind, engineStatus = EngineStatus.Loading, loadTimeMs = null) }
-
-        val newEngine = when (kind) {
-            EngineKind.Ollama -> OllamaLlmEngine()
-            EngineKind.Mock -> MockLlmEngine()
-            EngineKind.OnDevice -> {
-                val files = ModelConfig.findModelFiles(getApplication())
-                if (files == null) {
-                    val message = ModelConfig.missingFilesMessage(getApplication())
-                    _state.update { it.copy(engineStatus = EngineStatus.Failed(message)) }
-                    return
-                }
-                ExecuTorchLlmEngine(files)
-            }
-        }
-        engine = newEngine
-        viewModelScope.launch {
-            try {
-                newEngine.load()
-                _state.update { it.copy(engineStatus = EngineStatus.Ready, loadTimeMs = newEngine.loadTimeMs) }
-            } catch (e: LlmException) {
-                _state.update { it.copy(engineStatus = EngineStatus.Failed(e.message ?: "Unknown error")) }
-            }
-        }
+        llm.select(kind)
     }
 
     fun send(text: String) {
-        val current = _state.value
-        val activeEngine = engine
-        if (text.isBlank() || current.isGenerating || current.engineStatus != EngineStatus.Ready || activeEngine == null) return
+        val current = state.value
+        if (text.isBlank() || current.isGenerating || current.engineStatus != EngineStatus.Ready) return
 
         val history = current.messages
             .filter { it.error == null && it.text.isNotBlank() }
@@ -137,9 +93,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                val result = recorder.generate(activeEngine, BenchmarkRecord.CHAT_LABEL, run = 0, prompt) { token ->
-                    updateMessage(replyId) { it.copy(text = it.text + token) }
-                }
+                // Waits if today's tips are being generated; the model runs one prompt at a time.
+                val result = llm.withEngine { engine ->
+                    container.recorder.generate(engine, BenchmarkRecord.CHAT_LABEL, run = 0, prompt) { token ->
+                        updateMessage(replyId) { it.copy(text = it.text + token) }
+                    }
+                } ?: throw LlmException("No model is ready")
                 updateMessage(replyId) { it.copy(text = it.text.trim(), stats = result.stats) }
             } catch (e: LlmException) {
                 updateMessage(replyId) { it.copy(error = e.message ?: "Unknown error") }
@@ -150,39 +109,41 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun stop() {
-        engine?.stop()
+        llm.stop()
     }
 
     /** Runs every benchmark prompt [BenchmarkPrompts.RUNS_PER_PROMPT] times on the current engine. */
     fun runBenchmark() {
-        val current = _state.value
-        val activeEngine = engine
-        if (current.isGenerating || current.engineStatus != EngineStatus.Ready || activeEngine == null) return
+        val current = state.value
+        if (current.isGenerating || current.engineStatus != EngineStatus.Ready) return
 
         val schedule = BenchmarkPrompts.schedule()
         _state.update {
             it.copy(
                 isGenerating = true,
                 benchmark = BenchmarkUiState(
-                    engineLabel = activeEngine.name,
+                    engineLabel = current.engineKind.label,
                     totalRuns = schedule.size,
-                    csvPath = benchmarkLog.file.absolutePath,
+                    csvPath = container.benchmarkLog.file.absolutePath,
                 ),
             )
         }
         benchmarkJob = viewModelScope.launch {
-            val records = mutableListOf<BenchmarkRecord>()
             try {
-                for ((prompt, run) in schedule) {
-                    updateBenchmark { it.copy(currentRun = "${prompt.label}, run $run of ${BenchmarkPrompts.RUNS_PER_PROMPT}") }
-                    // No chat history, so every run of a prompt processes exactly the same input.
-                    val formatted = PromptFormat.llama3(SYSTEM_PROMPT, emptyList(), prompt.text)
-                    records += recorder.generate(activeEngine, prompt.label, run, formatted) {}.record
-                    updateBenchmark {
-                        it.copy(completedRuns = records.size, summaries = BenchmarkSummary.summarize(records))
+                val records = llm.withEngine { engine ->
+                    val records = mutableListOf<BenchmarkRecord>()
+                    for ((prompt, run) in schedule) {
+                        updateBenchmark { it.copy(currentRun = "${prompt.label}, run $run of ${BenchmarkPrompts.RUNS_PER_PROMPT}") }
+                        // No chat history, so every run of a prompt processes exactly the same input.
+                        val formatted = PromptFormat.llama3(SYSTEM_PROMPT, emptyList(), prompt.text)
+                        records += container.recorder.generate(engine, prompt.label, run, formatted) {}.record
+                        updateBenchmark {
+                            it.copy(completedRuns = records.size, summaries = BenchmarkSummary.summarize(records))
+                        }
                     }
-                }
-                benchmarkLog.logSummary(BenchmarkSummary.formatTable(activeEngine.name, BenchmarkSummary.summarize(records)))
+                    records
+                } ?: throw LlmException("No model is ready")
+                container.benchmarkLog.logSummary(BenchmarkSummary.formatTable(current.engineKind.label, BenchmarkSummary.summarize(records)))
             } catch (e: LlmException) {
                 updateBenchmark { it.copy(error = e.message ?: "Unknown error") }
             } finally {
@@ -197,7 +158,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         updateBenchmark { it.copy(error = "Stopped before all runs finished.") }
         benchmarkJob?.cancel()
         // Cancelling doesn't interrupt a blocking native call; this makes the current generation return.
-        engine?.stop()
+        llm.stop()
     }
 
     fun dismissBenchmark() {
@@ -213,10 +174,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun updateBenchmark(change: (BenchmarkUiState) -> BenchmarkUiState) {
         _state.update { state -> state.copy(benchmark = state.benchmark?.let(change)) }
-    }
-
-    override fun onCleared() {
-        engine?.close()
     }
 
     private companion object {
