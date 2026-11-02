@@ -1,212 +1,102 @@
-# LearnEdge — Project Context and Current Progress
+# LearnEdge — Project Context
 
-## 1. Project Overview
+## 1. Project
 
-**Project name:** LearnEdge — On-device Personalized AI Learning Companion
+**Title:** Agentic AI for Personalized Academic Learning and Intelligent Tutoring (Bharat SoC Challenge).
+**App name:** LearnEdge, an offline AI tutor Android app (Kotlin, Jetpack Compose).
 
-**Problem statement objective:** Develop an AI learning companion that creates personalized learning pathways based on learners' goals, interests, and current skill levels.
+The problem statement asks for an AI learning companion that understands learner goals, identifies
+skill gaps, recommends personalized learning pathways, generates study plans and adapts over time.
 
-### Required features
-- Understand learner goals.
-- Identify skill gaps.
-- Recommend personalized learning pathways.
-- Generate study plans.
-- Adapt recommendations over time.
+**Mandatory:** a Llama model running ON the phone via ExecuTorch (`org.pytorch:executorch-android:1.5.1`)
+on an Arm Android smartphone.
 
-### Mandatory technologies
-- Llama-family model for advisory/reasoning.
-- ExecuTorch as the on-device reference runtime.
-- Arm-based Android smartphone.
-
-### Deliverables
-- Source code.
-- Android application.
-- Demonstration video.
-- Technical report.
-
+**Deliverables:** source code, Android app, demonstration video, technical report.
 **Submission deadline:** 30 November 2026.
 
-## 2. Core Idea
+## 2. Fixed design (approved in the review documents; do not change)
 
-Build an Android application that runs AI locally on the phone instead of depending on cloud AI APIs.
+- **Knowledge graph.** The student is modelled as a knowledge graph: topics are nodes, prerequisites
+  are edges, and each topic stores the student's quiz scores and mastery P(L). Stored in Room (SQLite)
+  on the phone.
+- **Diagnostic quiz** at onboarding sets the starting mastery.
+- **Bayesian Knowledge Tracing (BKT)** updates mastery after every quiz answer.
+  Defaults: P(T)=0.15, P(S)=0.10, P(G)=0.20; mastered when P(L) >= 0.95.
+- **Planner** (deterministic, pure Kotlin):
+  1. weighted skill gap `g = w * max(0, target - current) / 10`
+  2. priority topological sort (Kahn), so prerequisites always come first
+  3. time-budget scheduler (days x minutes/day) that defers low-priority topics if they don't fit.
+- **The algorithms decide what, in what order and when. The LLM (Llama 3.2 1B on the phone) only
+  WRITES text** (explanations, tips, quizzes). All structured LLM output is validated (JSON schema +
+  known topic IDs), retried at most twice, then falls back to rule-based text.
+- **Privacy:** everything must work in airplane mode. Never send student data off the phone.
 
-Example user profile:
-- Goal: Become a Java backend developer.
-- Current skills: Java 6/10, SQL 4/10, Spring Boot 2/10.
-- Available study time: 2 hours daily.
-- Deadline: 60 days.
+## 3. Architecture
 
-The app should identify skill gaps, create a roadmap, generate daily study plans, provide tutoring and quizzes, and adjust recommendations using quiz performance and completed lessons.
+Package `com.example.learnedge`:
 
-## 3. How It Relates to SoC
+| Layer | Contents | Rule |
+|---|---|---|
+| `ui` / `chat` | Compose screens + ViewModels (MVVM) | |
+| `domain` | BKT, knowledge graph, planner | Pure Kotlin, no Android imports, fully unit-tested |
+| `data` | Room database, curriculum assets | |
+| `llm` | `LlmEngine` interface + `OllamaLlmEngine`, `ExecuTorchLlmEngine`, `MockLlmEngine` | Keep all three working |
 
-An SoC (System on Chip) integrates processing components into a chip, such as the CPU, GPU and potentially an AI accelerator.
+Key files:
+- `llm/ModelConfig.kt`: model file names, search folders, temperature, `SEQ_LEN`.
+- `llm/PromptFormat.kt`: Llama 3 Instruct chat template.
+- `llm/OllamaLlmEngine.kt`: dev-only engine; talks to Ollama on the laptop at `localhost:11434`
+  through `adb reverse tcp:11434 tcp:11434`. Not used for the airplane-mode demo.
+- `domain/Bkt.kt`, `domain/KnowledgeGraph.kt`: BKT update and validated prerequisite graph.
 
-The intended execution pipeline is:
+## 4. Working rules
 
-Android app → ExecuTorch → Llama model → phone's Arm hardware → generated response.
+- Make small, working steps. Build and run on the phone after each step.
+- Write unit tests for all domain logic (`app/src/test/.../domain`).
+- **Never commit model files** (`.pte`, tokenizer). They are git-ignored.
+- Ask before downloading anything large or deleting anything.
+- At the end of each step, say exactly what to check on the phone, then commit with a clear message.
 
-The Android app is the product interface. The on-device AI inference and its performance optimization are the SoC engineering component.
+Build and test: `./gradlew testDebugUnitTest assembleDebug`
+Install: `adb -s d5cd21da install -r app/build/outputs/apk/debug/app-debug.apk`
 
-Planned performance measurements:
-- Model size.
-- Model loading time.
-- Time to first token.
-- Generation speed in tokens/second.
-- RAM usage.
-- CPU utilization.
-- Temperature and battery impact, where practical.
-- Offline operation.
+## 5. Device
 
-The first implementation will target CPU inference with XNNPACK. Hardware acceleration can be explored later if supported by the phone and runtime.
+- **Phone:** Xiaomi `2312DRA50I` (adb serial `d5cd21da`), Android 16, arm64-v8a, 12 GB RAM,
+  about 13 GB free storage (checked 3 Nov 2026). An emulator (`emulator-5554`) may also be attached,
+  so always pass `-s d5cd21da`.
+- **PC:** Windows, Android Studio, SDK, NDK, CMake, Python 3.12, `hf` CLI.
 
-## 4. Planned Technology Stack
+## 6. On-device model
 
-### Android
-- Android Studio.
-- Kotlin.
-- Jetpack Compose.
-- Android SDK.
-- Android NDK and CMake.
-- ADB for device communication and debugging.
+- **Model:** Llama 3.2 1B Instruct, SpinQuant INT4 (XNNPACK, CPU), from Hugging Face
+  `executorch-community/Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8-ET` (not gated, ~1.1 GB).
+- **Local copy (outside the repo):** `C:\Users\chatt\learnedge-models\llama-3.2-1b-spinquant\`
+- **On the phone:** `/sdcard/Android/data/com.example.learnedge/files/model.pte` and `tokenizer.model`
+  (names set in `ModelConfig`). Push with:
+  ```
+  adb -s d5cd21da push <file>.pte /sdcard/Android/data/com.example.learnedge/files/model.pte
+  adb -s d5cd21da push tokenizer.model /sdcard/Android/data/com.example.learnedge/files/tokenizer.model
+  ```
+- Uninstalling the app deletes these files; push them again after a reinstall.
 
-### On-device AI
-- Llama 3.2 Instruct as the initial model family under consideration.
-- ExecuTorch Android runtime.
-- XNNPACK CPU backend.
-- Compatible `.pte` model artifact and matching tokenizer.
+## 7. Performance measurements (for the SoC report)
 
-### Learning system
-- Local learner profile.
-- Curriculum and prerequisite data.
-- Skill-gap calculation.
-- Study-plan generation.
-- Quiz and progress tracking.
-- Adaptive recommendations.
+Model size, load time, time to first token, tokens/second, RAM usage, CPU utilization,
+temperature/battery where practical, and offline (airplane-mode) operation. The chat screen
+already shows load time, TTFT and tokens/s.
 
-Room/SQLite can store learner progress locally. No cloud backend is required for the initial version.
+## 8. Status (3 Nov 2026)
 
-## 5. Device and Development Environment
+Done:
+- Dev environment, phone over ADB, git repo (`master`).
+- Chat app with engine selector (Ollama / On-device / Mock), streaming, stop, stats.
+- Domain core: BKT + knowledge graph with 17 unit tests.
 
-### Phone
-- Model identifier reported: `2312DRA50I`.
-- Android 16.
-- 12 GB RAM was reported from the phone information.
-- ADB successfully detects the phone.
-- Architecture check returned `arm64-v8a`.
-
-### PC
-- Windows.
-- Android Studio installed.
-- Python installed.
-- Android SDK Platform-Tools installed.
-- Android SDK Build-Tools installed.
-- Android NDK (Side by side) installed.
-- CMake installed.
-- ADB command works.
-
-The PC has approximately 30 GB of free storage, according to the user.
-
-**Phone's free internal storage has not yet been confirmed.**
-
-## 6. Completed Work
-
-1. Installed and opened Android Studio.
-2. Configured ADB on Windows by adding Android SDK Platform-Tools to PATH.
-3. Connected the phone over USB.
-4. Ran `adb devices` and received a device identifier with status `device`.
-5. Ran `adb shell getprop ro.product.cpu.abi` and received `arm64-v8a`.
-6. Verified the required SDK tools were installed.
-7. Created an Android Studio project named `LearnEdge` using Kotlin and Jetpack Compose.
-8. Successfully ran the default Android application on the phone.
-9. Opened `build.gradle.kts` for the app module.
-10. Added the following dependency:
-    `implementation("org.pytorch:executorch-android:1.5.1")`
-11. Gradle synchronization completed without errors.
-
-The default app still displays its starter screen. Llama has NOT yet been integrated or run.
-
-## 7. Model Choice Under Consideration
-
-The latest proposed starting model is **Llama 3.2 3B Instruct, using a compatible quantized artifact**.
-
-Reason: it may offer better tutoring and reasoning than a 1B model while remaining a possible mobile deployment target.
-
-However:
-- No model has been downloaded yet.
-- No `.pte` file or tokenizer has been installed.
-- The exact compatible model artifact, quantization, runtime version and supported operators still need verification.
-- The phone's 12 GB RAM does not by itself guarantee satisfactory performance.
-- The PC's 30 GB free storage is not the same as available phone storage.
-
-Use the official ExecuTorch documentation and examples to select compatible artifacts:
-- Android guide: https://docs.pytorch.org/executorch/stable/using-executorch-android.html
-- LLM Android guide: https://docs.pytorch.org/executorch/stable/llm/run-on-android.html
-- Example repository: https://github.com/meta-pytorch/executorch-examples/tree/main/llm/android/LlamaDemo
-
-Do not download an arbitrary Hugging Face Llama checkpoint and assume it can run directly. The Android runtime requires compatible exported artifacts and a matching tokenizer.
-
-## 8. Planned Development Workflow
-
-### Phase 1 — Prove on-device inference
-- Confirm available internal phone storage.
-- Verify the Android runtime version and compatible example.
-- Obtain a compatible Llama model artifact and tokenizer.
-- Load the model using the supported Android API.
-- Run a simple prompt on the physical phone.
-- Verify that inference works without an internet connection.
-
-### Phase 2 — Build the AI chat interface
-- Create a simple chat screen in Jetpack Compose.
-- Connect it to the local model.
-- Display generated responses.
-- Handle loading states, errors and long responses.
-
-### Phase 3 — Build learner personalization
-- Collect goals, interests, current skill levels, deadline and daily availability.
-- Store learner data locally.
-- Build a structured curriculum and prerequisite map.
-- Calculate skill gaps using deterministic logic.
-
-### Phase 4 — Generate learning pathways
-- Pass structured learner information to Llama.
-- Generate personalized roadmaps and study plans.
-- Validate the model output before displaying it.
-
-### Phase 5 — Adaptive learning
-- Add quizzes and topic completion tracking.
-- Track scores and weak areas.
-- Recalculate priorities and adjust future study plans.
-
-### Phase 6 — SoC benchmarking
-- Measure latency, generation throughput, memory usage and thermal behaviour.
-- Compare configurations such as quantization or supported execution backends where feasible.
-- Document hardware, runtime, model and test conditions.
-- Demonstrate offline inference.
-
-### Phase 7 — Final submission
-- Test and polish the Android application.
-- Organize source code and README.
-- Prepare the technical report.
-- Record the demonstration video.
-- Complete submission before 30 November 2026.
-
-## 9. Proposed Team Division
-
-If the team has three members:
-
-1. **AI/runtime:** Llama, ExecuTorch, model integration and benchmarking.
-2. **Android:** Kotlin, Compose, UI, storage and runtime integration.
-3. **Learning intelligence:** curriculum, skill-gap detection, study planning, quizzes and adaptation.
-
-For a smaller team, combine these responsibilities.
-
-## 10. Immediate Next Action
-
-Before downloading the model, check the phone's free internal storage:
-
-**Settings → Storage**
-
-Tell ChatGPT how much free storage is available. Then select a model artifact and tokenizer that are compatible with the ExecuTorch Android runtime and the target device.
-
-**Current status:** The development environment is ready, the physical phone is connected, the starter Android app runs, and the ExecuTorch dependency has synchronized. The next milestone is getting a compatible Llama model to generate its first response directly on the phone.
+Next:
+1. Run Llama 3.2 1B on the phone in airplane mode; record load time, TTFT, tokens/s.
+2. Planner (gap -> Kahn priority order -> time-budget scheduler) with tests.
+3. Room storage for the knowledge graph and progress; curriculum assets.
+4. Diagnostic quiz -> BKT -> plan screens.
+5. LLM text generation with JSON validation, 2 retries and rule-based fallback.
+6. Benchmarks, report, demo video, submission.
