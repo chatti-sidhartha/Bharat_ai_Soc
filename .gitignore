@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Model files: never commit (large, downloaded separately)
+*.pte
+*.gguf
+tokenizer.model
+tokenizer.bin
+tokenizer.json
