@@ -2,8 +2,8 @@ package com.example.learnedge.domain
 
 import java.util.PriorityQueue
 
-/** A topic in the learning path with its priority p_v. */
-data class PlannedTopic(val topic: Topic, val priority: Double)
+/** A topic in the learning path with its priority p_v and the [minutes] still to study (less than the estimate if partly done). */
+data class PlannedTopic(val topic: Topic, val priority: Double, val minutes: Int = topic.estimatedMinutes)
 
 /**
  * Orders the topics the learner still has to study. Deterministic: the same input always gives the

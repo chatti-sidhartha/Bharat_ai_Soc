@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.learnedge.appContainer
+import com.example.learnedge.data.plan.PlanRepository
 import com.example.learnedge.domain.DiagnosticAnswer
 import com.example.learnedge.domain.DiagnosticQuestion
 import com.example.learnedge.domain.InitialMastery
@@ -76,6 +77,7 @@ class DiagnosticViewModel(app: Application) : AndroidViewModel(app) {
         val mastery = InitialMastery.compute(track, profile.selfRatings, answers)
         container.learnerState.save(mastery.values)
         container.profiles.setDiagnosticCompleted(true)
+        container.plans.regenerate(PlanRepository.Mode.FROM_TODAY)
 
         val pL = mastery.mapValues { it.value.mastery }
         val results = track.skills.map { skill ->

@@ -9,6 +9,7 @@ data class PlanItem(
     val minutes: Int,
     val part: Int = 1,
     val parts: Int = 1,
+    val priority: Double = 0.0,
 )
 
 data class DayPlan(val date: LocalDate, val items: List<PlanItem>) {
@@ -38,11 +39,14 @@ object Scheduler {
         startDate: LocalDate,
         days: Int,
         dailyMinutes: Int,
+        /** Time still free on [startDate], e.g. when part of today was already studied. */
+        firstDayMinutes: Int = dailyMinutes,
     ): StudyPlan {
         require(dailyMinutes > 0) { "dailyMinutes must be positive, was $dailyMinutes" }
         val kept = path.toMutableList()
         val deferred = ArrayList<DeferredTopic>()
-        var packed = pack(kept, dailyMinutes)
+        val firstDay = firstDayMinutes.coerceIn(0, dailyMinutes)
+        var packed = pack(kept, dailyMinutes, firstDay)
 
         while (packed.size > days && kept.isNotEmpty()) {
             val keptIds = kept.mapTo(HashSet()) { it.topic.id }
@@ -58,33 +62,41 @@ object Scheduler {
                 "Doesn't fit before the deadline (${days * dailyMinutes} min available in $days days); " +
                     "lowest priority among topics nothing else depends on.",
             )
-            packed = pack(kept, dailyMinutes)
+            packed = pack(kept, dailyMinutes, firstDay)
         }
 
         return StudyPlan(
-            days = packed.mapIndexed { i, items -> DayPlan(startDate.plusDays(i.toLong()), items) },
+            // Day indexes are kept, so an unused first day still shifts the dates correctly.
+            days = packed.withIndex().filter { it.value.isNotEmpty() }
+                .map { (i, items) -> DayPlan(startDate.plusDays(i.toLong()), items) },
             deferred = deferred,
-            totalMinutes = kept.sumOf { it.topic.estimatedMinutes },
+            totalMinutes = kept.sumOf { it.minutes },
             feasible = deferred.isEmpty(),
         )
     }
 
-    private fun pack(path: List<PlannedTopic>, dailyMinutes: Int): List<List<PlanItem>> {
+    /** Returns one list per calendar day from the start date; only the first day can be empty. */
+    private fun pack(path: List<PlannedTopic>, dailyMinutes: Int, firstDayMinutes: Int): List<List<PlanItem>> {
+        if (path.isEmpty()) return emptyList()
         val days = ArrayList<MutableList<PlanItem>>()
         var today = mutableListOf<PlanItem>()
-        var remaining = dailyMinutes
+        var remaining = firstDayMinutes
 
         fun nextDay() {
-            if (today.isNotEmpty()) days += today
-            today = mutableListOf()
+            // A fresh, untouched day is reused; a day with items or reduced time is closed.
+            if (today.isNotEmpty() || remaining < dailyMinutes) {
+                days += today
+                today = mutableListOf()
+            }
             remaining = dailyMinutes
         }
 
-        for ((topic, _) in path) {
-            val minutes = topic.estimatedMinutes
+        for (planned in path) {
+            val topic = planned.topic
+            val minutes = planned.minutes
             if (minutes <= dailyMinutes) {
                 if (minutes > remaining) nextDay()
-                today += PlanItem(topic.id, minutes)
+                today += PlanItem(topic.id, minutes, priority = planned.priority)
                 remaining -= minutes
             } else {
                 if (remaining < dailyMinutes) nextDay()
@@ -92,7 +104,7 @@ object Scheduler {
                 var left = minutes
                 for (part in 1..parts) {
                     val chunk = min(dailyMinutes, left)
-                    today += PlanItem(topic.id, chunk, part, parts)
+                    today += PlanItem(topic.id, chunk, part, parts, planned.priority)
                     remaining -= chunk
                     left -= chunk
                     if (left > 0) nextDay()

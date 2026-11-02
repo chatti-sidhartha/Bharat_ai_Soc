@@ -40,5 +40,11 @@ object Bkt {
     fun updateAll(pL: Double, answers: List<Boolean>, params: BktParams = BktParams()): Double =
         answers.fold(pL) { p, correct -> update(p, correct, params) }
 
+    /** Learning transition only, without an observation: used when the learner marks a topic as studied. */
+    fun learn(pL: Double, params: BktParams = BktParams()): Double {
+        require(pL in 0.0..1.0) { "P(L) must be in [0, 1], was $pL" }
+        return pL + (1 - pL) * params.learn
+    }
+
     fun isMastered(pL: Double): Boolean = pL >= MASTERY_THRESHOLD
 }

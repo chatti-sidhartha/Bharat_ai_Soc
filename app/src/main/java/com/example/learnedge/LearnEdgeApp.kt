@@ -6,6 +6,7 @@ import com.example.learnedge.data.curriculum.CurriculumRepository
 import com.example.learnedge.data.db.AppDatabase
 import com.example.learnedge.data.diagnostic.DiagnosticRepository
 import com.example.learnedge.data.learner.LearnerStateRepository
+import com.example.learnedge.data.plan.PlanRepository
 import com.example.learnedge.data.profile.ProfileRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ class AppContainer(context: Context) {
     val profiles = ProfileRepository(database)
     val learnerState = LearnerStateRepository(database)
     val diagnostics = DiagnosticRepository(context.assets)
+    val plans = PlanRepository(database, curriculum, profiles, learnerState)
 }
 
 val Context.appContainer: AppContainer get() = (applicationContext as LearnEdgeApp).container

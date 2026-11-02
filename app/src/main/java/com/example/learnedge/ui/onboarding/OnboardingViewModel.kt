@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.learnedge.appContainer
+import com.example.learnedge.data.plan.PlanRepository
 import com.example.learnedge.domain.LearnerProfile
 import com.example.learnedge.domain.ProfileErrors
 import com.example.learnedge.domain.ProfileValidation
@@ -99,6 +100,8 @@ class OnboardingViewModel(app: Application) : AndroidViewModel(app) {
                     diagnosticCompleted = keepDiagnostic,
                 )
             )
+            // A changed deadline, budget or rating changes the plan; a new track waits for its diagnostic.
+            if (keepDiagnostic) container.plans.regenerate(PlanRepository.Mode.FROM_TODAY)
             _state.update { it.copy(saving = false, savedNeedsDiagnostic = !keepDiagnostic) }
         }
     }

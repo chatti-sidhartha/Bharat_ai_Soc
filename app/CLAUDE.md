@@ -89,14 +89,19 @@ already shows load time, TTFT and tokens/s.
 ## 8. Status (3 Nov 2026)
 
 Done:
-- Dev environment, phone over ADB, git repo (`master`).
-- Chat app with engine selector (Ollama / On-device / Mock), streaming, stop, stats.
-- Domain core: BKT + knowledge graph with 17 unit tests.
+- Llama 3.2 1B runs on the phone offline. Benchmark (3 runs/prompt): TTFT 0.8–2.1 s, decode 13–15 tok/s,
+  peak PSS ~1.36 GB, load 4.7 s. Benchmark menu in Tutor (⋮) writes `files/benchmarks.csv`.
+- App shell: bottom bar Today / Plan / Tutor (chat, 3 engines) / Progress (placeholder).
+- Curriculum (2 tracks, 64 topics) seeded into Room; onboarding; hand-written diagnostic (36 questions)
+  with BKT initial mastery; deterministic planner and scheduler; Today and Plan screens with
+  mark-done (one BKT learning transition) and automatic regeneration.
+- Room schema v3 with auto-migrations (schemas in `app/schemas`).
 
 Next:
-1. Run Llama 3.2 1B on the phone in airplane mode; record load time, TTFT, tokens/s.
-2. Planner (gap -> Kahn priority order -> time-budget scheduler) with tests.
-3. Room storage for the knowledge graph and progress; curriculum assets.
-4. Diagnostic quiz -> BKT -> plan screens.
-5. LLM text generation with JSON validation, 2 retries and rule-based fallback.
-6. Benchmarks, report, demo video, submission.
+1. LLM text: explanations and quizzes per topic with JSON validation, 2 retries, rule-based fallback.
+2. Topic quizzes that update mastery with BKT; Progress screen.
+3. Report, demo video, submission.
+
+Plan rules worth knowing: done items are kept as history; a topic counts as studied once its done
+minutes reach its estimate; packing is strictly in path order, so a day can end below the budget
+when the next topic doesn't fit.
