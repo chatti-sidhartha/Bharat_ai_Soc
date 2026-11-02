@@ -1,80 +1,77 @@
 package com.example.learnedge.domain
 
 /**
- * One node of the knowledge graph. [weight] is the topic's importance (w in the planner's gap
- * formula) and [estimatedMinutes] is the study time the scheduler budgets for it.
- */
-data class Topic(
-    val id: String,
-    val name: String,
-    val weight: Double = 1.0,
-    val estimatedMinutes: Int = 30,
-) {
-    init {
-        require(id.isNotBlank()) { "Topic id must not be blank" }
-        require(weight > 0) { "Topic $id: weight must be positive, was $weight" }
-        require(estimatedMinutes > 0) { "Topic $id: estimatedMinutes must be positive, was $estimatedMinutes" }
-    }
-}
-
-/** The student's state for one topic: quiz history and current mastery P(L). */
-data class TopicProgress(
-    val topicId: String,
-    val mastery: Double,
-    val correctAnswers: Int = 0,
-    val totalAnswers: Int = 0,
-) {
-    init {
-        require(mastery in 0.0..1.0) { "Mastery must be in [0, 1], was $mastery" }
-        require(correctAnswers in 0..totalAnswers) { "correctAnswers must be in 0..totalAnswers" }
-    }
-
-    val isMastered: Boolean get() = Bkt.isMastered(mastery)
-}
-
-/**
  * Topics (nodes) and prerequisite edges. [prerequisites] maps a topic id to the ids that must be
- * learned before it. Construction fails on unknown ids, self-loops or cycles, so every graph
- * that exists can be ordered by the planner.
+ * learned before it. Construction fails loudly on unknown ids, self-loops or cycles, so every
+ * graph that exists can be ordered by the planner.
  */
 class KnowledgeGraph(
-    topics: List<Topic>,
-    val prerequisites: Map<String, Set<String>>,
+    /** In curriculum order; the planner uses this order to break ties. */
+    val topics: List<Topic>,
+    prerequisites: Map<String, Set<String>>,
 ) {
-    val topics: Map<String, Topic> = topics.associateBy { it.id }
+    private val byId: Map<String, Topic> = topics.associateBy { it.id }
+    private val prerequisites: Map<String, Set<String>> = topics.associate { it.id to prerequisites[it.id].orEmpty() }
+    private val dependents: Map<String, Set<String>>
 
     init {
-        require(this.topics.size == topics.size) { "Duplicate topic ids" }
+        require(byId.size == topics.size) {
+            "Duplicate topic ids: ${topics.groupBy { it.id }.filterValues { it.size > 1 }.keys}"
+        }
         for ((topic, prereqs) in prerequisites) {
-            require(topic in this.topics) { "Unknown topic in prerequisites: $topic" }
+            require(topic in byId) { "Unknown topic in prerequisites: $topic" }
             for (p in prereqs) {
-                require(p in this.topics) { "Unknown prerequisite $p of $topic" }
+                require(p in byId) { "Topic $topic has unknown prerequisite $p" }
                 require(p != topic) { "Topic $topic lists itself as a prerequisite" }
             }
         }
-        require(!hasCycle()) { "Prerequisite graph has a cycle" }
+        dependents = topics.associate { t -> t.id to topics.filter { t.id in this.prerequisites.getValue(it.id) }.map { it.id }.toSet() }
+        val stuck = topicsOnOrAfterCycle()
+        require(stuck.isEmpty()) { "Prerequisite cycle detected among topics: ${stuck.joinToString()}" }
     }
 
-    fun prerequisitesOf(topicId: String): Set<String> = prerequisites[topicId].orEmpty()
+    private val descendants: Map<String, Set<String>> by lazy {
+        val memo = HashMap<String, Set<String>>()
+        fun collect(id: String): Set<String> = memo.getOrPut(id) {
+            dependents.getValue(id).flatMapTo(HashSet()) { collect(it) + it }
+        }
+        topics.associate { it.id to collect(it.id) }
+    }
 
-    /** Topics that list [topicId] as a prerequisite. */
-    fun dependentsOf(topicId: String): Set<String> =
-        prerequisites.filterValues { topicId in it }.keys
+    operator fun contains(topicId: String): Boolean = topicId in byId
 
-    private fun hasCycle(): Boolean {
-        // Kahn's algorithm: if some topics never reach in-degree 0, they sit on a cycle.
-        val inDegree = topics.keys.associateWith { prerequisitesOf(it).size }.toMutableMap()
-        val ready = ArrayDeque(inDegree.filterValues { it == 0 }.keys)
-        var visited = 0
+    fun topic(topicId: String): Topic = byId[topicId] ?: throw NoSuchElementException("Unknown topic $topicId")
+
+    /** Direct prerequisites of [topicId]. */
+    fun getPrerequisites(topicId: String): Set<String> = prerequisites[topicId] ?: unknown(topicId)
+
+    /** Topics that list [topicId] as a direct prerequisite. */
+    fun getDependents(topicId: String): Set<String> = dependents[topicId] ?: unknown(topicId)
+
+    /** Every topic that needs [topicId] directly or indirectly. */
+    fun getDescendants(topicId: String): Set<String> = descendants[topicId] ?: unknown(topicId)
+
+    /** How many topics depend on [topicId], directly or indirectly. Used to prioritise "foundation" topics. */
+    fun descendantCount(topicId: String): Int = getDescendants(topicId).size
+
+    private fun unknown(topicId: String): Nothing = throw NoSuchElementException("Unknown topic $topicId")
+
+    /**
+     * Kahn's algorithm. Returns the topics that never reach in-degree 0: those on a cycle or
+     * downstream of one. Empty means the graph is acyclic.
+     */
+    private fun topicsOnOrAfterCycle(): List<String> {
+        val inDegree = topics.associate { it.id to prerequisites.getValue(it.id).size }.toMutableMap()
+        val ready = ArrayDeque(topics.map { it.id }.filter { inDegree.getValue(it) == 0 })
         while (ready.isNotEmpty()) {
             val id = ready.removeFirst()
-            visited++
-            for (dependent in dependentsOf(id)) {
+            inDegree.remove(id)
+            for (dependent in dependents.getValue(id)) {
                 val left = inDegree.getValue(dependent) - 1
                 inDegree[dependent] = left
                 if (left == 0) ready.addLast(dependent)
             }
         }
-        return visited != topics.size
+        return inDegree.keys.toList()
     }
 }

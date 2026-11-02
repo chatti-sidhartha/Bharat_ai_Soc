@@ -7,23 +7,41 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class KnowledgeGraphTest {
-    private val a = Topic("a", "Variables")
-    private val b = Topic("b", "Loops")
-    private val c = Topic("c", "Functions")
+    private fun topic(id: String) = Topic(id, id.uppercase(), skillId = "s", estimatedMinutes = 30)
+    private val a = topic("a")
+    private val b = topic("b")
+    private val c = topic("c")
+    private val d = topic("d")
+
+    // a -> b -> d, a -> c -> d
+    private val diamond = KnowledgeGraph(
+        listOf(a, b, c, d),
+        mapOf("b" to setOf("a"), "c" to setOf("a"), "d" to setOf("b", "c")),
+    )
 
     @Test
-    fun validGraph_exposesPrerequisitesAndDependents() {
-        val graph = KnowledgeGraph(listOf(a, b, c), mapOf("b" to setOf("a"), "c" to setOf("a", "b")))
-        assertEquals(setOf("a", "b"), graph.prerequisitesOf("c"))
-        assertEquals(emptySet<String>(), graph.prerequisitesOf("a"))
-        assertEquals(setOf("b", "c"), graph.dependentsOf("a"))
+    fun prerequisitesAndDependents_areDirectEdges() {
+        assertEquals(setOf("b", "c"), diamond.getPrerequisites("d"))
+        assertEquals(emptySet<String>(), diamond.getPrerequisites("a"))
+        assertEquals(setOf("b", "c"), diamond.getDependents("a"))
+        assertEquals(emptySet<String>(), diamond.getDependents("d"))
     }
 
     @Test
-    fun cycle_isRejected() {
-        assertThrows(IllegalArgumentException::class.java) {
+    fun descendants_areTransitiveAndCountedOnce() {
+        assertEquals(setOf("b", "c", "d"), diamond.getDescendants("a"))
+        assertEquals(3, diamond.descendantCount("a"))
+        assertEquals(1, diamond.descendantCount("b"))
+        assertEquals(0, diamond.descendantCount("d"))
+    }
+
+    @Test
+    fun cycle_isRejectedWithTheTopicsInvolved() {
+        val e = assertThrows(IllegalArgumentException::class.java) {
             KnowledgeGraph(listOf(a, b, c), mapOf("a" to setOf("c"), "b" to setOf("a"), "c" to setOf("b")))
         }
+        assertTrue(e.message!!, e.message!!.contains("cycle"))
+        assertTrue(e.message!!, listOf("a", "b", "c").all { it in e.message!! })
     }
 
     @Test
@@ -35,28 +53,34 @@ class KnowledgeGraphTest {
 
     @Test
     fun unknownIds_areRejected() {
-        assertThrows(IllegalArgumentException::class.java) {
-            KnowledgeGraph(listOf(a), mapOf("a" to setOf("zzz")))
-        }
-        assertThrows(IllegalArgumentException::class.java) {
-            KnowledgeGraph(listOf(a), mapOf("zzz" to setOf("a")))
-        }
+        assertThrows(IllegalArgumentException::class.java) { KnowledgeGraph(listOf(a), mapOf("a" to setOf("zzz"))) }
+        assertThrows(IllegalArgumentException::class.java) { KnowledgeGraph(listOf(a), mapOf("zzz" to setOf("a"))) }
     }
 
     @Test
     fun duplicateIds_areRejected() {
-        assertThrows(IllegalArgumentException::class.java) {
-            KnowledgeGraph(listOf(a, a.copy(name = "Other")), emptyMap())
-        }
+        assertThrows(IllegalArgumentException::class.java) { KnowledgeGraph(listOf(a, a.copy(name = "Other")), emptyMap()) }
     }
 
     @Test
-    fun invalidTopicAndProgress_areRejected() {
-        assertThrows(IllegalArgumentException::class.java) { Topic("x", "X", weight = 0.0) }
+    fun unknownTopicLookup_throws() {
+        assertFalse("zzz" in diamond)
+        assertThrows(NoSuchElementException::class.java) { diamond.getPrerequisites("zzz") }
+    }
+
+    @Test
+    fun track_rejectsTopicWithUnknownSkill() {
+        val graph = KnowledgeGraph(listOf(Topic("x", "X", skillId = "missing", estimatedMinutes = 10)), emptyMap())
+        assertThrows(IllegalArgumentException::class.java) { Track("t", "T", listOf(Skill("s", "S", 5, 1.0)), graph) }
+    }
+
+    @Test
+    fun invalidValues_areRejected() {
+        assertThrows(IllegalArgumentException::class.java) { Skill("s", "S", targetLevel = 11, weight = 1.0) }
+        assertThrows(IllegalArgumentException::class.java) { Skill("s", "S", targetLevel = 5, weight = 0.0) }
+        assertThrows(IllegalArgumentException::class.java) { Topic("x", "X", "s", estimatedMinutes = 0) }
         assertThrows(IllegalArgumentException::class.java) { TopicProgress("x", mastery = 1.2) }
-        assertThrows(IllegalArgumentException::class.java) {
-            TopicProgress("x", mastery = 0.5, correctAnswers = 3, totalAnswers = 2)
-        }
+        assertThrows(IllegalArgumentException::class.java) { TopicProgress("x", mastery = 0.5, attempts = 2, correct = 3) }
     }
 
     @Test
