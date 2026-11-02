@@ -25,13 +25,13 @@ object Bkt {
         require(pL in 0.0..1.0) { "P(L) must be in [0, 1], was $pL" }
         val (learn, slip, guess) = params
         // Posterior that the topic was already known, given the observed answer.
-        val posterior = if (correct) {
-            val known = pL * (1 - slip)
-            known / (known + (1 - pL) * guess)
+        val (known, unknown) = if (correct) {
+            pL * (1 - slip) to (1 - pL) * guess
         } else {
-            val known = pL * slip
-            known / (known + (1 - pL) * (1 - guess))
+            pL * slip to (1 - pL) * (1 - guess)
         }
+        // 0/0 only happens when the observation is impossible under both hypotheses; keep the prior.
+        val posterior = if (known + unknown == 0.0) pL else known / (known + unknown)
         // Chance to learn the topic during this practice opportunity.
         return (posterior + (1 - posterior) * learn).coerceIn(0.0, 1.0)
     }

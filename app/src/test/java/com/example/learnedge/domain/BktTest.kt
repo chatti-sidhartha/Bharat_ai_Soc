@@ -26,6 +26,19 @@ class BktTest {
     }
 
     @Test
+    fun reviewDocumentExample_correctGives071_wrongGives019() {
+        val params = BktParams(learn = 0.15, slip = 0.10, guess = 0.20)
+        assertEquals(0.71, Bkt.update(0.30, correct = true, params), 0.005)
+        assertEquals(0.19, Bkt.update(0.30, correct = false, params), 0.005)
+    }
+
+    @Test
+    fun impossibleObservation_keepsPrior() {
+        // pL = 0 and guess = 0: a correct answer can't happen; don't divide by zero.
+        assertEquals(0.0, Bkt.update(0.0, correct = true, BktParams(learn = 0.0, guess = 0.0)), eps)
+    }
+
+    @Test
     fun correctAnswer_raisesMastery_wrongAnswer_lowersIt() {
         val pL = 0.5
         assertTrue(Bkt.update(pL, correct = true) > pL)
