@@ -1,6 +1,8 @@
 package com.example.learnedge.ui
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -31,10 +33,11 @@ enum class Tab(val route: String, val label: String, val icon: String) {
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onEditProfile: () -> Unit) {
     val navController = rememberNavController()
-    // Scoped to the activity, not the Tutor destination, so the on-device model stays loaded across tabs.
-    val chatViewModel: ChatViewModel = viewModel()
+    // Scoped to the activity, not a destination, so the on-device model stays loaded across tabs and screens.
+    val activity = LocalContext.current as ComponentActivity
+    val chatViewModel: ChatViewModel = viewModel(viewModelStoreOwner = activity)
 
     Scaffold(bottomBar = { BottomBar(navController) }) { padding ->
         NavHost(
@@ -42,7 +45,7 @@ fun MainScreen() {
             startDestination = Tab.Today.route,
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
-            composable(Tab.Today.route) { TodayScreen() }
+            composable(Tab.Today.route) { TodayScreen(onEditProfile) }
             composable(Tab.Plan.route) { PlanScreen() }
             composable(Tab.Tutor.route) { ChatScreen(chatViewModel) }
             composable(Tab.Progress.route) { ProgressScreen() }
