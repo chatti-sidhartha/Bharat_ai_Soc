@@ -16,8 +16,19 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.font.FontWeight
+import com.example.learnedge.benchmark.BenchmarkPrompts
+import com.example.learnedge.benchmark.PromptSummary
+import com.example.learnedge.benchmark.Stat
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -52,7 +63,15 @@ fun ChatScreen(viewModel: ChatViewModel = viewModel()) {
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(title = { Text("LearnEdge Chat") })
+                TopAppBar(
+                    title = { Text("LearnEdge Chat") },
+                    actions = {
+                        OverflowMenu(
+                            canBenchmark = state.engineStatus == EngineStatus.Ready && !state.isGenerating,
+                            onBenchmark = viewModel::runBenchmark,
+                        )
+                    },
+                )
                 EngineSelector(state.engineKind, enabled = !busy, onSelect = viewModel::selectEngine)
                 if (state.engineStatus == EngineStatus.Loading) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -72,6 +91,97 @@ fun ChatScreen(viewModel: ChatViewModel = viewModel()) {
             EngineStatusBanner(state)
             MessageList(state.messages, state.isGenerating, Modifier.weight(1f))
         }
+    }
+
+    state.benchmark?.let {
+        BenchmarkDialog(it, onStop = viewModel::stopBenchmark, onDismiss = viewModel::dismissBenchmark)
+    }
+}
+
+@Composable
+private fun OverflowMenu(canBenchmark: Boolean, onBenchmark: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) { Text("⋮", style = MaterialTheme.typography.titleLarge) }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("Benchmark") },
+                enabled = canBenchmark,
+                onClick = {
+                    expanded = false
+                    onBenchmark()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun BenchmarkDialog(benchmark: BenchmarkUiState, onStop: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = { if (!benchmark.running) onDismiss() },
+        title = { Text("Benchmark · ${benchmark.engineLabel}") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    "${BenchmarkPrompts.ALL.size} prompts × ${BenchmarkPrompts.RUNS_PER_PROMPT} runs · " +
+                        "${benchmark.completedRuns}/${benchmark.totalRuns} done",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                if (benchmark.running) {
+                    LinearProgressIndicator(
+                        progress = { benchmark.completedRuns.toFloat() / benchmark.totalRuns },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    )
+                    benchmark.currentRun?.let { Text("Running: $it", style = MaterialTheme.typography.bodySmall) }
+                }
+                benchmark.error?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
+                }
+                benchmark.summaries.forEach { SummaryTable(it) }
+                if (!benchmark.running && benchmark.completedRuns > 0) {
+                    Text(
+                        "Values are mean (min–max). Saved to ${benchmark.csvPath}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            if (benchmark.running) {
+                TextButton(onClick = onStop) { Text("Stop") }
+            } else {
+                TextButton(onClick = onDismiss) { Text("Close") }
+            }
+        },
+    )
+}
+
+@Composable
+private fun SummaryTable(summary: PromptSummary) {
+    Column(Modifier.padding(top = 12.dp)) {
+        Text(
+            "${summary.promptLabel} · ${summary.runs} run${if (summary.runs == 1) "" else "s"}",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+        )
+        HorizontalDivider(Modifier.padding(vertical = 4.dp))
+        SummaryRow("TTFT (ms)", summary.timeToFirstTokenMs, 0)
+        SummaryRow("Decode (tok/s)", summary.decodeTokensPerSecond, 1)
+        SummaryRow("Tokens", summary.totalTokens, 0)
+        SummaryRow("Total (ms)", summary.totalTimeMs, 0)
+        SummaryRow("Peak PSS (MB)", summary.peakPssMb, 0)
+        SummaryRow("Battery (°C)", summary.batteryTempC, 1)
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, stat: Stat?, decimals: Int) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodySmall)
+        Text(stat?.format(decimals) ?: "–", style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -108,7 +218,17 @@ private fun EngineStatusBanner(state: ChatUiState) {
             CardDefaults.cardColors()
         },
     ) {
-        Text(text, Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
+        Column(Modifier.padding(12.dp)) {
+            if (isError) {
+                Text(
+                    "${state.engineKind.label} engine unavailable",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+            }
+            Text(text, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 

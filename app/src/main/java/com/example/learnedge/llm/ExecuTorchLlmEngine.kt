@@ -35,13 +35,20 @@ class ExecuTorchLlmEngine(private val files: ModelFiles) : LlmEngine {
                     .build()
             )
         } catch (e: Exception) {
-            throw LlmException("Could not open model files: ${e.message}", e)
+            throw LlmException("Could not open the model files: ${e.message}\n\n${describeFiles()}", e)
+        } catch (e: UnsatisfiedLinkError) {
+            throw LlmException("The ExecuTorch native library could not be loaded on this phone: ${e.message}", e)
         }
         try {
             newModule.load()
         } catch (e: Exception) {
             newModule.close()
-            throw LlmException("ExecuTorch failed to load the model: ${e.message}", e)
+            throw LlmException(
+                "ExecuTorch failed to load the model: ${e.message ?: e.javaClass.simpleName}\n\n" +
+                    "${describeFiles()}\n\nThe .pte may be incomplete, or exported for an incompatible " +
+                    "ExecuTorch version, or the tokenizer may not match the model.",
+                e,
+            )
         }
         module = newModule
         loadTimeMs = SystemClock.elapsedRealtime() - start
@@ -97,6 +104,10 @@ class ExecuTorchLlmEngine(private val files: ModelFiles) : LlmEngine {
         }
         executor.shutdown()
     }
+
+    private fun describeFiles(): String =
+        "• ${files.model.absolutePath}: ${ModelConfig.describe(files.model)}\n" +
+            "• ${files.tokenizer.absolutePath}: ${ModelConfig.describe(files.tokenizer)}"
 
     private companion object {
         const val TAG = "LearnEdgeLlm"

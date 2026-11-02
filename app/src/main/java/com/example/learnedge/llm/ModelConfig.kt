@@ -25,12 +25,29 @@ object ModelConfig {
         searchDirs(context).firstNotNullOfOrNull { dir ->
             val model = File(dir, MODEL_FILE)
             val tokenizer = File(dir, TOKENIZER_FILE)
-            if (model.canRead() && tokenizer.canRead()) ModelFiles(model, tokenizer) else null
+            if (isUsable(model) && isUsable(tokenizer)) ModelFiles(model, tokenizer) else null
         }
 
-    fun missingFilesMessage(context: Context): String =
-        "Model files not found. Expected $MODEL_FILE and $TOKENIZER_FILE in one of:\n" +
-            searchDirs(context).joinToString("\n") { "• ${it.absolutePath}" }
+    /** Says, per folder, which file is missing, unreadable or empty, so the fix is obvious on screen. */
+    fun missingFilesMessage(context: Context): String = buildString {
+        append("On-device model not found. Both $MODEL_FILE and $TOKENIZER_FILE must be in one of these folders:")
+        searchDirs(context).forEach { dir ->
+            append("\n\n${dir.absolutePath}")
+            listOf(MODEL_FILE, TOKENIZER_FILE).forEach { name ->
+                append("\n• $name: ${describe(File(dir, name))}")
+            }
+        }
+        append("\n\nCopy them with adb push (see app/CLAUDE.md), then tap On-device again.")
+    }
+
+    fun describe(file: File): String = when {
+        !file.exists() -> "missing"
+        !file.canRead() -> "not readable by the app"
+        file.length() == 0L -> "empty (0 bytes)"
+        else -> "found (${file.length() / 1_000_000} MB)"
+    }
+
+    private fun isUsable(file: File) = file.canRead() && file.length() > 0
 }
 
 data class ModelFiles(val model: File, val tokenizer: File)
