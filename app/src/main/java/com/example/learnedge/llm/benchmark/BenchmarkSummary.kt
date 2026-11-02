@@ -1,4 +1,4 @@
-package com.example.learnedge.benchmark
+package com.example.learnedge.llm.benchmark
 
 data class Stat(val mean: Double, val min: Double, val max: Double) {
     /** "mean (min–max)" with the given number of decimals. */

@@ -1,4 +1,4 @@
-package com.example.learnedge.benchmark
+package com.example.learnedge.llm.benchmark
 
 import java.util.Locale
 

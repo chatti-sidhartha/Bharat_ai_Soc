@@ -1,4 +1,4 @@
-package com.example.learnedge.chat
+package com.example.learnedge.ui.tutor
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -26,9 +26,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.font.FontWeight
-import com.example.learnedge.benchmark.BenchmarkPrompts
-import com.example.learnedge.benchmark.PromptSummary
-import com.example.learnedge.benchmark.Stat
+import com.example.learnedge.llm.benchmark.BenchmarkPrompts
+import com.example.learnedge.llm.benchmark.PromptSummary
+import com.example.learnedge.llm.benchmark.Stat
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -64,7 +64,7 @@ fun ChatScreen(viewModel: ChatViewModel = viewModel()) {
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text("LearnEdge Chat") },
+                    title = { Text("Tutor") },
                     actions = {
                         OverflowMenu(
                             canBenchmark = state.engineStatus == EngineStatus.Ready && !state.isGenerating,

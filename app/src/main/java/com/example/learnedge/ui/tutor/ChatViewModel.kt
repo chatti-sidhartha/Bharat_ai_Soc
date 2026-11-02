@@ -1,14 +1,14 @@
-package com.example.learnedge.chat
+package com.example.learnedge.ui.tutor
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.learnedge.benchmark.BenchmarkLog
-import com.example.learnedge.benchmark.BenchmarkPrompts
-import com.example.learnedge.benchmark.BenchmarkRecord
-import com.example.learnedge.benchmark.BenchmarkSummary
-import com.example.learnedge.benchmark.GenerationRecorder
-import com.example.learnedge.benchmark.PromptSummary
+import com.example.learnedge.llm.benchmark.BenchmarkLog
+import com.example.learnedge.llm.benchmark.BenchmarkPrompts
+import com.example.learnedge.llm.benchmark.BenchmarkRecord
+import com.example.learnedge.llm.benchmark.BenchmarkSummary
+import com.example.learnedge.llm.benchmark.GenerationRecorder
+import com.example.learnedge.llm.benchmark.PromptSummary
 import com.example.learnedge.llm.ExecuTorchLlmEngine
 import com.example.learnedge.llm.GenerationStats
 import com.example.learnedge.llm.LlmEngine

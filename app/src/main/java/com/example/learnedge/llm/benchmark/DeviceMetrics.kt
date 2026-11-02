@@ -1,4 +1,4 @@
-package com.example.learnedge.benchmark
+package com.example.learnedge.llm.benchmark
 
 import android.content.Context
 import android.content.Intent

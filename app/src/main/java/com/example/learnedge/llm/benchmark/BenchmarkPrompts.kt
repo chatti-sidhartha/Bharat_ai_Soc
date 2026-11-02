@@ -1,4 +1,4 @@
-package com.example.learnedge.benchmark
+package com.example.learnedge.llm.benchmark
 
 data class BenchmarkPrompt(val label: String, val text: String)
 
