@@ -95,7 +95,10 @@ Done:
 - Curriculum (2 tracks, 64 topics) seeded into Room; onboarding; hand-written diagnostic (36 questions)
   with BKT initial mastery; deterministic planner and scheduler; Today and Plan screens with
   mark-done (one BKT learning transition) and automatic regeneration.
-- Room schema v3 with auto-migrations (schemas in `app/schemas`).
+- AI daily tips on Today (JSON validation, 2 retries, rule-based fallback, AI/Rule-based labels).
+- Room schema v4 with auto-migrations (schemas in `app/schemas`).
+- v0.3-daily-plan: full airplane-mode E2E on the phone passed; README.md has build steps,
+  model setup, architecture, latest benchmark and known limitations.
 
 Next:
 1. LLM text: explanations and quizzes per topic with JSON validation, 2 retries, rule-based fallback.
