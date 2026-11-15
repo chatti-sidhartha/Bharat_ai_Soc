@@ -108,3 +108,32 @@ Next:
 Plan rules worth knowing: done items are kept as history; a topic counts as studied once its done
 minutes reach its estimate; packing is strictly in path order, so a day can end below the budget
 when the next topic doesn't fit.
+
+## 9. Roadmap to submission
+
+Set by the user on 15 Nov 2026 after a 12-day gap. Follow exactly.
+
+### Standing orders
+
+1. The locked design in section 2 does not change: algorithms decide what and when; the LLM only
+   writes text; every LLM output is validated, retried at most twice, then replaced by bundled or
+   rule-based content. Everything works in airplane mode.
+2. One prompt = one milestone. Do not start work from a later milestone. Do not refactor unrelated code.
+3. Domain logic stays pure Kotlin with unit tests. All tests pass before every commit. Room changes
+   use migrations.
+4. Every milestone ends with: a check on the phone in airplane mode with the On-device engine, a
+   commit, and a report to the user (what works, what you verified on the phone, what you could NOT
+   verify, and any numbers you measured).
+5. Never invent a benchmark number, test result or accuracy figure. If you did not measure it, say so.
+6. Ask the user before downloading anything large, deleting data, or pushing to a remote.
+7. If a milestone takes more than twice its budget, stop and tell the user what to cut.
+8. Feature freeze is 25 Nov. After that: bug fixes, measurements, report and video only.
+
+### Milestones
+
+M1 Lessons + question bank -> M2 Topic quiz + BKT loop -> M3 Progress, knowledge map, "Why this?"
+-> M4 Night Shift pre-generation -> M5 Hardening + final benchmarks -> M6 Technical report
+-> M7 Demo video -> M8 Submission.
+
+Submission deadline per the user's roadmap message: 23 Nov 2026 (section 1 above still says 30 Nov;
+see the open question in the report of 15 Nov).
