@@ -22,8 +22,10 @@ import androidx.room.migration.AutoMigrationSpec
         PlanItemEntity::class,
         DailyTipEntity::class,
         GeneratedContentEntity::class,
+        QuestionAttemptEntity::class,
+        ReportedQuestionEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
     // Schema changes are migrated, never destructive: learner data must survive app updates.
     autoMigrations = [
@@ -33,6 +35,8 @@ import androidx.room.migration.AutoMigrationSpec
         // v5 had a topic_lessons table (one JSON-style AI lesson per topic); generated_content replaces it.
         AutoMigration(from = 4, to = 6),
         AutoMigration(from = 5, to = 6, spec = AppDatabase.Migration5To6::class),
+        // v6 -> v7: question_attempts and reported_questions are new tables.
+        AutoMigration(from = 6, to = 7),
     ],
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -42,6 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun planDao(): PlanDao
     abstract fun tipDao(): TipDao
     abstract fun generatedContentDao(): GeneratedContentDao
+    abstract fun quizDao(): QuizDao
 
     /** v5 -> v6: the topic_lessons table (one lesson per topic) is replaced by generated_content. */
     @DeleteTable(tableName = "topic_lessons")

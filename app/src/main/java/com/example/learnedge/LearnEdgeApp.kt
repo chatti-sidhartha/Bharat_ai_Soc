@@ -11,6 +11,7 @@ import com.example.learnedge.data.diagnostic.DiagnosticRepository
 import com.example.learnedge.data.learner.LearnerStateRepository
 import com.example.learnedge.data.plan.PlanRepository
 import com.example.learnedge.data.profile.ProfileRepository
+import com.example.learnedge.data.quiz.QuizRepository
 import com.example.learnedge.data.tips.TipsRepository
 import com.example.learnedge.llm.LlmService
 import com.example.learnedge.llm.benchmark.BenchmarkLog
@@ -62,6 +63,9 @@ class AppContainer(context: Context) {
             debuggable && File(context.getExternalFilesDir(null), FORCE_INVALID_FLAG_FILE).exists()
         },
     )
+
+    /** Quiz answers -> mastery (one BKT update each) -> plan rebuilt from tomorrow. */
+    val quiz = QuizRepository(database, questionBank, learnerState, plans)
 
     private companion object {
         const val FORCE_INVALID_FLAG_FILE = "force_validation_failure"

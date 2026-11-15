@@ -21,12 +21,16 @@ import androidx.navigation.compose.rememberNavController
 import com.example.learnedge.ui.lesson.LessonScreen
 import com.example.learnedge.ui.plan.PlanScreen
 import com.example.learnedge.ui.progress.ProgressScreen
+import com.example.learnedge.ui.quiz.QuizScreen
 import com.example.learnedge.ui.today.TodayScreen
 import com.example.learnedge.ui.tutor.ChatScreen
 import com.example.learnedge.ui.tutor.ChatViewModel
 
 /** A topic's lesson, opened from Today or Plan. It is not a tab, so no bottom-bar item is selected on it. */
 private const val LESSON_ROUTE = "lesson/{topicId}"
+
+/** A quiz on one topic, started from its lesson. Not a tab either. */
+private const val QUIZ_ROUTE = "quiz/{topicId}"
 
 /** Bottom-bar destinations. The icon is an emoji so no icon library is needed. */
 enum class Tab(val route: String, val label: String, val icon: String) {
@@ -54,7 +58,13 @@ fun MainScreen(onEditProfile: () -> Unit) {
             composable(Tab.Plan.route) { PlanScreen(onOpenTopic = openTopic) }
             composable(Tab.Tutor.route) { ChatScreen(chatViewModel) }
             composable(Tab.Progress.route) { ProgressScreen() }
-            composable(LESSON_ROUTE) { LessonScreen(onBack = { navController.popBackStack() }) }
+            composable(LESSON_ROUTE) {
+                LessonScreen(
+                    onBack = { navController.popBackStack() },
+                    onTakeQuiz = { topicId -> navController.navigate("quiz/$topicId") },
+                )
+            }
+            composable(QUIZ_ROUTE) { QuizScreen(onBack = { navController.popBackStack() }) }
         }
     }
 }

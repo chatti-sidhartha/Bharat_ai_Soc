@@ -152,3 +152,16 @@ one per day; the freeze date has not been revised by the user.
   validation to fail and show the bundled fallback.
 - Known limits: the validator checks form, not accuracy (a poor analogy passes); the correct option is
   strictly the longest in 46% of bank questions (ratchet test, target <= 35%).
+
+### M2 status (15 Nov 2026): done, tag v0.4-quiz-loop
+- Lesson screen -> "Take quiz": 3-5 bank questions (unseen / least recently seen first, easiest first,
+  reported ones never). Each answer = one BKT update with the locked parameters, stored in
+  `question_attempts` (questionId, topicId, chosenIndex, correct, timestamp, pLBefore, pLAfter), then
+  right/wrong + the bank explanation. Summary shows mastery before -> after; P(L) >= 0.95 = mastered;
+  the plan is then rebuilt with `PlanRepository.regenerate(FROM_TOMORROW)` (same as "mark done", which is unchanged).
+- "Report this question": stored in `reported_questions`; the topic's quiz history is replayed from the
+  mastery before that question's first attempt without it (`AttemptHistory.replay`), later attempts are re-chained.
+- Room v7 (auto-migration 6->7). Domain: `Quiz.kt` (QuizSelector, AttemptHistory); tests in `QuizLoopTest`.
+- Known limits: the bank has only 3 questions per topic, so "unseen first" cannot really work after one
+  quiz and a reported question leaves a 2-question quiz; today's plan items are kept as they are
+  (FROM_TOMORROW); a report does not replay mastery changes from other sources (e.g. "mark done") made after it.

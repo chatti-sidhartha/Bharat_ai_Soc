@@ -56,7 +56,7 @@ data class LessonUiState(
 
 class LessonViewModel(app: Application, savedStateHandle: SavedStateHandle) : AndroidViewModel(app) {
     private val container = app.appContainer
-    private val topicId: String = checkNotNull(savedStateHandle["topicId"]) { "lesson route needs a topicId" }
+    val topicId: String = checkNotNull(savedStateHandle["topicId"]) { "lesson route needs a topicId" }
 
     val state: StateFlow<LessonUiState> = combine(
         container.profiles.observe(),
@@ -82,7 +82,7 @@ class LessonViewModel(app: Application, savedStateHandle: SavedStateHandle) : An
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LessonScreen(onBack: () -> Unit, viewModel: LessonViewModel = viewModel()) {
+fun LessonScreen(onBack: () -> Unit, onTakeQuiz: (String) -> Unit, viewModel: LessonViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
@@ -118,8 +118,7 @@ fun LessonScreen(onBack: () -> Unit, viewModel: LessonViewModel = viewModel()) {
                         onClick = viewModel::explainDifferently,
                         enabled = explanation.status == ExplanationStatus.READY,
                     ) { Text("Explain it differently") }
-                    // The quiz arrives in the next milestone.
-                    Button(onClick = {}, enabled = false) { Text("Take quiz") }
+                    Button(onClick = { onTakeQuiz(viewModel.topicId) }, enabled = state.questionCount > 0) { Text("Take quiz") }
                 }
             }
             item {
