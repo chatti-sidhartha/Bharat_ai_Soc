@@ -20,15 +20,20 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 private val DAY_FORMAT = DateTimeFormatter.ofPattern("EEE d MMM")
@@ -38,6 +43,9 @@ private val DEADLINE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy")
 @Composable
 fun PlanScreen(onOpenTopic: (String) -> Unit, viewModel: PlanViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // The item whose "Why this?" explanation is open, with where it sits in the plan ("today", "on Tue 17 Nov" or "" if deferred).
+    var why by remember { mutableStateOf<Pair<StudyItemUi, String>?>(null) }
+    why?.let { (item, whenText) -> WhyDialog(item, whenText) { why = null } }
     Scaffold(topBar = { TopAppBar(title = { Text("Study plan") }) }) { padding ->
         if (state.loading) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -49,12 +57,15 @@ fun PlanScreen(onOpenTopic: (String) -> Unit, viewModel: PlanViewModel = viewMod
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item { Summary(state, onRegenerate = viewModel::regenerate) }
-            items(state.days, key = { it.date.toEpochDay() }) { day -> DayCard(day, onOpenTopic) }
+            items(state.days, key = { it.date.toEpochDay() }) { day ->
+                val whenText = if (day.date == LocalDate.now()) "today" else "on ${day.date.format(DAY_FORMAT)}"
+                DayCard(day, onOpenTopic, onWhy = { item -> why = item to whenText })
+            }
             if (state.deferred.isNotEmpty()) {
                 item {
                     Text("Deferred (${state.deferred.size})", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
                 }
-                items(state.deferred, key = { it.id }) { DeferredCard(it) }
+                items(state.deferred, key = { it.id }) { DeferredCard(it, onWhy = { why = it to "" }) }
             }
         }
     }
@@ -84,7 +95,7 @@ private fun Summary(state: PlanUiState, onRegenerate: () -> Unit) {
 }
 
 @Composable
-private fun DayCard(day: PlanDayUi, onOpenTopic: (String) -> Unit) {
+private fun DayCard(day: PlanDayUi, onOpenTopic: (String) -> Unit, onWhy: (StudyItemUi) -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -101,13 +112,14 @@ private fun DayCard(day: PlanDayUi, onOpenTopic: (String) -> Unit) {
                     )
                     Text(item.detailLine(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                TextButton(onClick = { onWhy(item) }, contentPadding = PaddingValues(0.dp)) { Text("Why this?") }
             }
         }
     }
 }
 
 @Composable
-private fun DeferredCard(item: StudyItemUi) {
+private fun DeferredCard(item: StudyItemUi, onWhy: () -> Unit) {
     Card(
         Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -116,6 +128,7 @@ private fun DeferredCard(item: StudyItemUi) {
             Text(item.topicName, style = MaterialTheme.typography.titleSmall)
             Text(item.detailLine(), style = MaterialTheme.typography.bodySmall)
             item.deferredReason?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            TextButton(onClick = onWhy, contentPadding = PaddingValues(0.dp)) { Text("Why this?") }
         }
     }
 }

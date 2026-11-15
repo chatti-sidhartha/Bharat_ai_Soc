@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.learnedge.appContainer
 import com.example.learnedge.data.tips.TipsProgress
+import com.example.learnedge.domain.PlanReasons
 import com.example.learnedge.domain.SkillGaps
 import com.example.learnedge.llm.tips.DailyTips
 import com.example.learnedge.llm.tips.GapLine
@@ -53,6 +54,8 @@ class TodayViewModel(app: Application) : AndroidViewModel(app) {
         val track = container.curriculum.track(profile.trackId)
         val todayDay = today.toEpochDay()
         val todayItems = items.filter { it.dayEpochDay == todayDay }
+        // Reasons only read the planner's numbers; they never influence the plan.
+        val reasons = PlanReasons.compute(track, mastery.mapValues { it.value.mastery }, profile.selfRatings)
 
         val gaps = SkillGaps.compute(track, mastery.mapValues { it.value.mastery }, profile.selfRatings).values
             .filter { it.gap > 0 }
@@ -79,7 +82,7 @@ class TodayViewModel(app: Application) : AndroidViewModel(app) {
             loading = false,
             date = today,
             trackName = track.name,
-            items = todayItems.map { it.toUi(track, mastery) },
+            items = todayItems.map { it.toUi(track, mastery, reasons) },
             nextStudyDay = items.mapNotNull { it.dayEpochDay }.filter { it > todayDay }.minOrNull()?.let(LocalDate::ofEpochDay),
             tips = stored?.takeIf { it.signature == tipInput?.signature }?.tips,
             tipsProgress = progress,

@@ -1,6 +1,7 @@
 package com.example.learnedge.ui.plan
 
 import com.example.learnedge.data.db.PlanItemEntity
+import com.example.learnedge.domain.PlanReason
 import com.example.learnedge.domain.TopicProgress
 import com.example.learnedge.domain.Track
 
@@ -18,9 +19,15 @@ data class StudyItemUi(
     /** Current P(L) of the topic, or null if never assessed. */
     val mastery: Double?,
     val deferredReason: String?,
+    /** The numbers behind this planning decision; the "Why?" text is rendered from it by ReasonText. */
+    val reason: PlanReason? = null,
 )
 
-fun PlanItemEntity.toUi(track: Track, mastery: Map<String, TopicProgress>): StudyItemUi {
+fun PlanItemEntity.toUi(
+    track: Track,
+    mastery: Map<String, TopicProgress>,
+    reasons: Map<String, PlanReason> = emptyMap(),
+): StudyItemUi {
     val topic = if (topicId in track.graph) track.graph.topic(topicId) else null
     return StudyItemUi(
         id = id,
@@ -34,6 +41,7 @@ fun PlanItemEntity.toUi(track: Track, mastery: Map<String, TopicProgress>): Stud
         done = done,
         mastery = mastery[topicId]?.mastery,
         deferredReason = deferredReason,
+        reason = reasons[topicId],
     )
 }
 

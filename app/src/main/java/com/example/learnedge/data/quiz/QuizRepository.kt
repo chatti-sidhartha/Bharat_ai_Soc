@@ -13,6 +13,8 @@ import com.example.learnedge.domain.Bkt
 import com.example.learnedge.domain.QuizAttempt
 import com.example.learnedge.domain.QuizSelector
 import com.example.learnedge.domain.TopicProgress
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /** The questions of one quiz and the topic's mastery when it started. */
 data class QuizSession(val topicId: String, val questions: List<BankQuestion>, val startMastery: Double)
@@ -42,6 +44,13 @@ class QuizRepository(
     }
 
     suspend fun currentMastery(topicId: String): Double = learnerState.get()[topicId]?.mastery ?: 0.0
+
+    /** Every stored attempt, oldest first (for the mastery-over-time chart). */
+    fun observeAttempts(): Flow<List<QuizAttempt>> = dao.observeAllAttempts().map { rows ->
+        rows.map { QuizAttempt(it.questionId, it.topicId, it.correct, it.timestamp, it.pLBefore, it.pLAfter) }
+    }
+
+    fun observeReported(): Flow<Set<String>> = dao.observeReportedIds().map { it.toSet() }
 
     /** Applies one BKT update for the answer and stores the attempt, atomically. */
     suspend fun answer(question: BankQuestion, chosenIndex: Int): AnswerResult = db.withTransaction {

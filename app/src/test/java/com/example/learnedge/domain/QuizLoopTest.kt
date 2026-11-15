@@ -1,6 +1,7 @@
 package com.example.learnedge.domain
 
 import java.time.LocalDate
+import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -123,6 +124,56 @@ class QuizLoopTest {
         assertEquals(3, QuizSelector.select(bank.take(3), emptyMap(), emptySet()).size)
         // With one of three reported only two are left: the bank is the limit, not the rule.
         assertEquals(2, QuizSelector.select(bank.take(3), emptyMap(), setOf("q1")).size)
+    }
+
+    // --- Questions rotate between quizzes ---
+
+    private val bank8 = (1..8).map { question("q$it", (it - 1) / 3 + 1) }
+
+    @Test
+    fun selector_twoQuizzesInARow_coverAllEightQuestionsWithoutRepeating() {
+        val first = QuizSelector.select(bank8, emptyMap(), emptySet(), random = Random(1))
+        assertEquals(QuizSelector.DEFAULT_QUESTIONS, first.size)
+        val seen = first.associate { it.id to 100L }
+        val second = QuizSelector.select(bank8, seen, emptySet(), random = Random(2))
+        assertEquals(emptySet<String>(), first.map { it.id }.toSet() intersect second.map { it.id }.toSet())
+        assertEquals(8, (first + second).map { it.id }.toSet().size)
+    }
+
+    @Test
+    fun selector_aThirdQuiz_repeatsTheQuestionsSeenLongestAgo() {
+        val first = QuizSelector.select(bank8, emptyMap(), emptySet(), random = Random(3))
+        val second = QuizSelector.select(bank8, first.associate { it.id to 100L }, emptySet(), random = Random(4))
+        val seen = first.associate { it.id to 100L } + second.associate { it.id to 200L }
+        val third = QuizSelector.select(bank8, seen, emptySet(), random = Random(5))
+        assertEquals(first.map { it.id }.toSet(), third.map { it.id }.toSet())
+    }
+
+    @Test
+    fun selector_choosesDifferentQuestionsAcrossSessions() {
+        val picks = (1..12).map { seed -> QuizSelector.select(bank8, emptyMap(), emptySet(), random = Random(seed)).map { it.id }.toSet() }
+        assertTrue("every session picked the same questions", picks.toSet().size > 1)
+    }
+
+    @Test
+    fun shuffledOptions_keepTheSameOptions_andTheAnswerStaysCorrect() {
+        val q = BankQuestion("x", "t", "Q?", listOf("a", "b", "c", "d"), answerIndex = 2, explanation = "e", difficulty = 1)
+        val shuffles = (1..40).map { q.shuffled(Random(it)) }
+        shuffles.forEach {
+            assertEquals("c", it.options[it.answerIndex])
+            assertEquals(setOf("a", "b", "c", "d"), it.options.toSet())
+            assertTrue(it.isCorrect(it.options.indexOf("c")))
+        }
+        assertTrue("the order never changed", shuffles.map { it.options }.toSet().size > 1)
+        assertTrue("the answer position never changed", shuffles.map { it.answerIndex }.toSet().size > 1)
+    }
+
+    @Test
+    fun selectedQuestions_comeWithShuffledOptions_andAValidAnswer() {
+        // question() builds options a, b, c, d with the correct answer "a"; shuffling must keep tracking it.
+        QuizSelector.select(bank8, emptyMap(), emptySet(), random = Random(7)).forEach {
+            assertEquals("a", it.options[it.answerIndex])
+        }
     }
 
     // --- The plan after a quiz ---

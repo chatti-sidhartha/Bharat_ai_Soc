@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 /**
  * One answered quiz question. [pLBefore] and [pLAfter] are the topic's mastery around the single
@@ -54,6 +55,13 @@ interface QuizDao {
 
     @Query("SELECT questionId FROM reported_questions")
     suspend fun reportedIds(): List<String>
+
+    /** Every attempt, oldest first, for the Progress screen. */
+    @Query("SELECT * FROM question_attempts ORDER BY timestamp, id")
+    fun observeAllAttempts(): Flow<List<QuestionAttemptEntity>>
+
+    @Query("SELECT questionId FROM reported_questions")
+    fun observeReportedIds(): Flow<List<String>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertReported(reported: ReportedQuestionEntity)
 }

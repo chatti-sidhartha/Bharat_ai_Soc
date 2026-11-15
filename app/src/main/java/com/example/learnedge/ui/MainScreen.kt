@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.learnedge.ui.lesson.LessonScreen
+import com.example.learnedge.ui.map.KnowledgeMapScreen
 import com.example.learnedge.ui.plan.PlanScreen
 import com.example.learnedge.ui.progress.ProgressScreen
 import com.example.learnedge.ui.quiz.QuizScreen
@@ -28,6 +29,9 @@ import com.example.learnedge.ui.tutor.ChatViewModel
 
 /** A topic's lesson, opened from Today or Plan. It is not a tab, so no bottom-bar item is selected on it. */
 private const val LESSON_ROUTE = "lesson/{topicId}"
+
+/** The knowledge map, opened from the Progress screen. Not a tab either. */
+private const val MAP_ROUTE = "map"
 
 /** A quiz on one topic, started from its lesson. Not a tab either. */
 private const val QUIZ_ROUTE = "quiz/{topicId}"
@@ -57,7 +61,13 @@ fun MainScreen(onEditProfile: () -> Unit) {
             composable(Tab.Today.route) { TodayScreen(onEditProfile, onOpenTopic = openTopic) }
             composable(Tab.Plan.route) { PlanScreen(onOpenTopic = openTopic) }
             composable(Tab.Tutor.route) { ChatScreen(chatViewModel) }
-            composable(Tab.Progress.route) { ProgressScreen() }
+            composable(Tab.Progress.route) { ProgressScreen(onOpenMap = { navController.navigate(MAP_ROUTE) }) }
+            composable(MAP_ROUTE) {
+                KnowledgeMapScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenLesson = { topicId -> navController.navigate("lesson/$topicId") },
+                )
+            }
             composable(LESSON_ROUTE) {
                 LessonScreen(
                     onBack = { navController.popBackStack() },

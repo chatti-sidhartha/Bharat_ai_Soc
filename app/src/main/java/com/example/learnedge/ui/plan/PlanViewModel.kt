@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.learnedge.appContainer
 import com.example.learnedge.data.plan.PlanRepository
+import com.example.learnedge.domain.PlanReasons
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -45,6 +46,8 @@ class PlanViewModel(app: Application) : AndroidViewModel(app) {
         if (profile == null) return@combine PlanUiState(loading = false)
         val track = container.curriculum.track(profile.trackId)
         val todayDay = LocalDate.now().toEpochDay()
+        // Reasons only read the planner's numbers; they never influence the plan.
+        val reasons = PlanReasons.compute(track, mastery.mapValues { it.value.mastery }, profile.selfRatings)
         PlanUiState(
             loading = false,
             trackName = track.name,
@@ -52,8 +55,8 @@ class PlanViewModel(app: Application) : AndroidViewModel(app) {
             dailyMinutes = profile.dailyMinutes,
             days = items.filter { (it.dayEpochDay ?: Long.MIN_VALUE) >= todayDay }
                 .groupBy { it.dayEpochDay!! }
-                .map { (day, dayItems) -> PlanDayUi(LocalDate.ofEpochDay(day), dayItems.map { it.toUi(track, mastery) }) },
-            deferred = items.filter { it.dayEpochDay == null }.map { it.toUi(track, mastery) },
+                .map { (day, dayItems) -> PlanDayUi(LocalDate.ofEpochDay(day), dayItems.map { it.toUi(track, mastery, reasons) }) },
+            deferred = items.filter { it.dayEpochDay == null }.map { it.toUi(track, mastery, reasons) },
             feasible = plan?.feasible ?: true,
             regenerating = busy,
         )

@@ -24,6 +24,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
@@ -34,6 +37,7 @@ import com.example.learnedge.data.tips.TipsProgress
 import com.example.learnedge.llm.tips.Tip
 import com.example.learnedge.llm.tips.TipSource
 import com.example.learnedge.ui.plan.StudyItemUi
+import com.example.learnedge.ui.plan.WhyDialog
 import com.example.learnedge.ui.plan.detailLine
 import java.time.format.DateTimeFormatter
 
@@ -43,6 +47,8 @@ private val DAY_FORMAT = DateTimeFormatter.ofPattern("EEEE, d MMMM")
 @Composable
 fun TodayScreen(onEditProfile: () -> Unit, onOpenTopic: (String) -> Unit, viewModel: TodayViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var whyItem by remember { mutableStateOf<StudyItemUi?>(null) }
+    whyItem?.let { WhyDialog(it, whenText = "today") { whyItem = null } }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -77,6 +83,7 @@ fun TodayScreen(onEditProfile: () -> Unit, onOpenTopic: (String) -> Unit, viewMo
                     item,
                     tip = state.tips?.tips?.get(item.topicId),
                     onOpen = { onOpenTopic(item.topicId) },
+                    onWhy = { whyItem = item },
                     onCheckedChange = { viewModel.setDone(item.id, it) },
                 )
             }
@@ -149,7 +156,7 @@ private fun SourceLabel(source: TipSource) {
 }
 
 @Composable
-private fun TodayItem(item: StudyItemUi, tip: Tip?, onOpen: () -> Unit, onCheckedChange: (Boolean) -> Unit) {
+private fun TodayItem(item: StudyItemUi, tip: Tip?, onOpen: () -> Unit, onWhy: () -> Unit, onCheckedChange: (Boolean) -> Unit) {
     Card(
         onClick = onOpen,
         modifier = Modifier.fillMaxWidth(),
@@ -176,6 +183,7 @@ private fun TodayItem(item: StudyItemUi, tip: Tip?, onOpen: () -> Unit, onChecke
                 } else if (item.description.isNotEmpty()) {
                     Text(item.description, style = MaterialTheme.typography.bodySmall)
                 }
+                TextButton(onClick = onWhy, contentPadding = PaddingValues(0.dp)) { Text("Why today?") }
             }
         }
     }

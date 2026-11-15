@@ -15,10 +15,15 @@ object QuizSelector {
     const val MIN_QUESTIONS = 3
     const val MAX_QUESTIONS = 5
 
+    /** A quiz has 4 questions by default, so a bank of 8 gives two completely different quizzes in a row. */
+    const val DEFAULT_QUESTIONS = 4
+
     /**
      * Picks up to [count] questions (3-5 when the bank has that many): questions the learner has
-     * never seen first, then the ones seen longest ago. [hidden] (reported) questions are never used.
-     * The chosen questions are asked from easiest to hardest.
+     * never seen first, then the ones seen longest ago; among equally recent ones the choice is
+     * random, so the quizzes differ from one session to the next. [hidden] (reported) questions are
+     * never used. The questions are asked from easiest to hardest, and each question's options are
+     * shuffled, with [BankQuestion.answerIndex] following the correct option.
      *
      * @param lastSeen epoch milliseconds the learner last answered each question id.
      */
@@ -26,13 +31,17 @@ object QuizSelector {
         bank: List<BankQuestion>,
         lastSeen: Map<String, Long>,
         hidden: Set<String>,
-        count: Int = MAX_QUESTIONS,
+        count: Int = DEFAULT_QUESTIONS,
+        random: kotlin.random.Random = kotlin.random.Random.Default,
     ): List<BankQuestion> {
         val n = count.coerceIn(MIN_QUESTIONS, MAX_QUESTIONS)
+        // Shuffle first, then sort stably: ties keep their random order.
         return bank.filter { it.id !in hidden }
-            .sortedWith(compareBy<BankQuestion>({ lastSeen[it.id] ?: Long.MIN_VALUE }, { it.difficulty }, { it.id }))
+            .shuffled(random)
+            .sortedBy { lastSeen[it.id] ?: Long.MIN_VALUE }
             .take(n)
-            .sortedWith(compareBy({ it.difficulty }, { it.id }))
+            .sortedBy { it.difficulty }
+            .map { it.shuffled(random) }
     }
 }
 

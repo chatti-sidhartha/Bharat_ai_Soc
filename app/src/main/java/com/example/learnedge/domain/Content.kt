@@ -23,6 +23,13 @@ data class BankQuestion(
     }
 
     fun isCorrect(choice: Int): Boolean = choice == answerIndex
+
+    /** The same question with its options in random order; [answerIndex] follows the correct option. */
+    fun shuffled(random: kotlin.random.Random): BankQuestion {
+        val correctText = options[answerIndex]
+        val mixed = options.shuffled(random)
+        return copy(options = mixed, answerIndex = mixed.indexOf(correctText))
+    }
 }
 
 /** Where a piece of text shown to the learner came from. */

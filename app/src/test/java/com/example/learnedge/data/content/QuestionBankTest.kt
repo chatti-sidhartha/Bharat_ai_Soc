@@ -16,12 +16,13 @@ class QuestionBankTest {
     private val questions by lazy { QuestionBankParser.parse(asset("question_bank.json")) }
 
     @Test
-    fun everyTopicOfBothTracksHasAtLeastThreeQuestions_andNoQuestionIsAboutAnUnknownTopic() {
+    fun everyTopicOfBothTracksHasAtLeastEightQuestions_andNoQuestionIsAboutAnUnknownTopic() {
+        // Eight per topic gives two completely different four-question quizzes before any question repeats.
         val byTopic = questions.groupBy { it.topicId }
-        topics.forEach { assertTrue("questions for ${it.id}", (byTopic[it.id]?.size ?: 0) >= 3) }
+        topics.forEach { assertTrue("questions for ${it.id}", (byTopic[it.id]?.size ?: 0) >= 8) }
         assertEquals(emptySet<String>(), byTopic.keys - topics.map { it.id }.toSet())
         assertEquals(64, topics.size)
-        assertEquals(192, questions.size)
+        assertEquals(512, questions.size)
     }
 
     @Test
@@ -68,10 +69,10 @@ class QuestionBankTest {
     }
 
     /**
-     * KNOWN LIMITATION: the correct option is strictly the longest in about 46% of questions
-     * (measured 15 Nov 2026: 89 of 192), against roughly 25% expected by chance, so a test-wise
-     * guesser gains an edge. This is a ratchet: it fails if the bank gets MORE biased. The target
-     * is <= 35%; lower the limit as questions are rebalanced.
+     * KNOWN LIMITATION: the correct option is strictly the longest in about 45% of questions
+     * (measured 15 Nov 2026 after growing the bank to 512: 233 of 512), against roughly 25%
+     * expected by chance, so a test-wise guesser gains an edge. This is a ratchet: it fails if the
+     * bank gets MORE biased. The target is <= 35%; lower the limit as questions are rebalanced.
      */
     @Test
     fun correctOptionIsStrictlyTheLongest_noMoreOftenThanTheCurrentRatchet() {
@@ -80,7 +81,7 @@ class QuestionBankTest {
         }
         assertTrue(
             "correct option is strictly the longest in $longest of ${questions.size} questions",
-            longest.toDouble() / questions.size <= 0.48,
+            longest.toDouble() / questions.size <= 0.46,
         )
     }
 
