@@ -1,0 +1,498 @@
+{
+  "track": "dsa",
+  "topics": [
+    { "topicId": "d-bigo",
+      "keyPoints": [
+        "Big-O describes how running time or memory grows with the input size n, ignoring constant factors.",
+        "Common orders from fast to slow: O(1), O(log n), O(n), O(n log n), O(n^2), O(2^n).",
+        "Worst case is the usual default; best and average cases can differ (for example in quicksort)."
+      ],
+      "questions": [
+        { "id": "b-d-bigo-1", "question": "Which of these grows fastest as n becomes large?",
+          "options": ["O(n^2)", "O(n)", "O(log n)", "O(n log n)"], "answerIndex": 0,
+          "explanation": "Quadratic growth overtakes linear, logarithmic and n log n growth for large n." },
+        { "id": "b-d-bigo-2", "question": "What is the time complexity of reading array[i]?",
+          "options": ["O(n)", "O(1)", "O(log n)", "O(n^2)"], "answerIndex": 1,
+          "explanation": "The address is computed directly from the index, so it takes constant time." },
+        { "id": "b-d-bigo-3", "question": "What does O(n) + O(n^2) simplify to?",
+          "options": ["O(n)", "O(n^3)", "O(n^2)", "O(2n)"], "answerIndex": 2,
+          "explanation": "Only the fastest-growing term matters in Big-O." }
+      ] },
+    { "topicId": "d-analysis",
+      "keyPoints": [
+        "A single loop up to n is O(n); two nested loops each up to n are O(n^2).",
+        "A loop that halves or doubles its variable every step runs O(log n) times.",
+        "Amortized cost averages expensive rare operations over many cheap ones, for example appending to a dynamic array is O(1) amortized."
+      ],
+      "questions": [
+        { "id": "b-d-analysis-1", "question": "What is the complexity of a loop over i < n containing a loop over j < n?",
+          "options": ["O(n)", "O(n^2)", "O(n log n)", "O(log n)"], "answerIndex": 1,
+          "explanation": "The inner loop runs n times for each of the n outer iterations." },
+        { "id": "b-d-analysis-2", "question": "How many times does for (i = 1; i < n; i *= 2) run?",
+          "options": ["O(n)", "O(1)", "O(log n)", "O(n^2)"], "answerIndex": 2,
+          "explanation": "i doubles each step, so it reaches n after about log2(n) steps." },
+        { "id": "b-d-analysis-3", "question": "The recurrence T(n) = 2T(n/2) + O(n) solves to...",
+          "options": ["O(n)", "O(log n)", "O(n^2)", "O(n log n)"], "answerIndex": 3,
+          "explanation": "There are log n levels and each level does O(n) work, as in merge sort." }
+      ] },
+    { "topicId": "d-arrays",
+      "keyPoints": [
+        "Arrays store elements contiguously, so access by index is O(1).",
+        "Inserting or deleting in the middle shifts elements, which costs O(n).",
+        "Dynamic arrays double their capacity when full, giving amortized O(1) appends."
+      ],
+      "questions": [
+        { "id": "b-d-arrays-1", "question": "What is the cost of inserting at the start of an array of n elements?",
+          "options": ["O(1)", "O(log n)", "O(n)", "O(n^2)"], "answerIndex": 2,
+          "explanation": "Every existing element must shift one place to the right." },
+        { "id": "b-d-arrays-2", "question": "Why is array indexing O(1)?",
+          "options": ["Arrays are always kept sorted by index", "Arrays internally use hashing for lookups", "Arrays use binary search to find an index", "The address is computed from the index directly"], "answerIndex": 3,
+          "explanation": "address = start + index * element size." },
+        { "id": "b-d-arrays-3", "question": "When a dynamic array is full and you append, it typically...",
+          "options": ["Allocates a bigger array and copies the elements", "Throws an error until you resize it", "Deletes the oldest element to make room", "Turns itself into a linked list"], "answerIndex": 0,
+          "explanation": "Growing geometrically keeps the amortized cost of append at O(1)." }
+      ] },
+    { "topicId": "d-strings",
+      "keyPoints": [
+        "Strings are often immutable, so repeated concatenation in a loop costs O(n^2); use a builder or a list of characters.",
+        "A palindrome reads the same forwards and backwards; check it with two pointers from both ends.",
+        "Two strings are anagrams if their character counts match."
+      ],
+      "questions": [
+        { "id": "b-d-strings-1", "question": "Best way to check whether s is a palindrome in O(n) time and O(1) extra space?",
+          "options": ["Sort the string", "Use recursion with substring copies", "Use a hash set", "Two pointers moving in from both ends"], "answerIndex": 3,
+          "explanation": "Compare s[l] and s[r] while moving l up and r down." },
+        { "id": "b-d-strings-2", "question": "How can you check whether two strings are anagrams in O(n)?",
+          "options": ["Compare character frequency counts", "Compare lengths only", "Compare first letters", "Sort both and compare in O(1)"], "answerIndex": 0,
+          "explanation": "Anagrams have identical counts for every character." },
+        { "id": "b-d-strings-3", "question": "Why is s += c in a long loop slow for immutable strings?",
+          "options": ["It uses recursion", "Each step copies the whole string", "It sorts the string", "It allocates a hash table"], "answerIndex": 1,
+          "explanation": "Each += creates a new string and copies all previous characters, giving O(n^2) total." }
+      ] },
+    { "topicId": "d-twopointers",
+      "keyPoints": [
+        "Two pointers walk an array from both ends or at different speeds, avoiding nested loops.",
+        "A sliding window keeps a range [left, right] and updates its sum or counts as it moves, giving O(n).",
+        "In a sorted array, move the left pointer up if the sum is too small and the right pointer down if it is too large."
+      ],
+      "questions": [
+        { "id": "b-d-twopointers-1", "question": "Finding a pair that sums to a target in a sorted array with two pointers takes...",
+          "options": ["O(n^2)", "O(log n)", "O(n)", "O(n log n) at best"], "answerIndex": 2,
+          "explanation": "Each step moves one pointer inward, so there are at most n steps." },
+        { "id": "b-d-twopointers-2", "question": "A sliding window is most suited to problems about...",
+          "options": ["Tree traversal", "Graph shortest paths", "Sorting", "Contiguous subarrays or substrings"], "answerIndex": 3,
+          "explanation": "The window represents a contiguous range that grows and shrinks." },
+        { "id": "b-d-twopointers-3", "question": "In a sorted array, if arr[l] + arr[r] < target, you should...",
+          "options": ["Move l right", "Move r left", "Stop", "Reset both pointers"], "answerIndex": 0,
+          "explanation": "The sum is too small, so you need a larger left value." }
+      ] },
+    { "topicId": "d-prefix",
+      "keyPoints": [
+        "prefix[i] stores the sum of the first i elements.",
+        "The sum of elements l..r is prefix[r + 1] - prefix[l], answered in O(1) after O(n) preprocessing.",
+        "The same idea works for counts, XOR and 2-D grids."
+      ],
+      "questions": [
+        { "id": "b-d-prefix-1", "question": "After building prefix sums, a range-sum query costs...",
+          "options": ["O(n)", "O(1)", "O(log n)", "O(n^2)"], "answerIndex": 1,
+          "explanation": "It is one subtraction of two precomputed values." },
+        { "id": "b-d-prefix-2", "question": "With prefix[i] = sum of the first i elements, the sum of indexes l..r is...",
+          "options": ["prefix[r] - prefix[l]", "prefix[r] + prefix[l]", "prefix[r + 1] - prefix[l]", "prefix[l] - prefix[r + 1]"], "answerIndex": 2,
+          "explanation": "prefix[r + 1] covers elements 0..r and prefix[l] covers 0..l-1; the difference is l..r." },
+        { "id": "b-d-prefix-3", "question": "What does building the prefix array for n elements cost?",
+          "options": ["O(1)", "O(n^2)", "O(log n)", "O(n)"], "answerIndex": 3,
+          "explanation": "One pass adds each element to the running total." }
+      ] },
+    { "topicId": "d-linkedlist",
+      "keyPoints": [
+        "Each node holds a value and a pointer to the next node (and the previous node in a doubly linked list).",
+        "Inserting or deleting after a known node is O(1), but finding a node by index is O(n).",
+        "Floyd's cycle detection uses a slow and a fast pointer: if they meet, there is a cycle."
+      ],
+      "questions": [
+        { "id": "b-d-linkedlist-1", "question": "What is the cost of accessing the i-th node of a singly linked list?",
+          "options": ["O(n)", "O(1)", "O(log n)", "O(n^2)"], "answerIndex": 0,
+          "explanation": "You must follow next pointers from the head." },
+        { "id": "b-d-linkedlist-2", "question": "How does Floyd's algorithm detect a cycle?",
+          "options": ["By sorting the nodes", "A slow and a fast pointer eventually meet", "By counting nodes only", "By reversing the list twice"], "answerIndex": 1,
+          "explanation": "Inside a cycle the fast pointer laps the slow pointer." },
+        { "id": "b-d-linkedlist-3", "question": "To reverse a singly linked list in place you...",
+          "options": ["Sort the list", "Delete the head repeatedly", "Point each node's next to the previous node", "Copy the values into a hash set"], "answerIndex": 2,
+          "explanation": "Walk the list while redirecting each next pointer backwards." }
+      ] },
+    { "topicId": "d-stack",
+      "keyPoints": [
+        "A stack is last-in, first-out: push and pop at the top are both O(1).",
+        "Stacks check balanced brackets: push openers, and pop and match on closers.",
+        "A monotonic stack keeps elements in sorted order to find, for example, the next greater element in O(n)."
+      ],
+      "questions": [
+        { "id": "b-d-stack-1", "question": "Which order does a stack follow?",
+          "options": ["FIFO", "Sorted", "Random", "LIFO"], "answerIndex": 3,
+          "explanation": "The last element pushed is the first one popped." },
+        { "id": "b-d-stack-2", "question": "A stack-based checker processes the string ([)]. What does it report?",
+          "options": ["Not balanced", "Balanced", "Empty", "Only a syntax error at the end"], "answerIndex": 0,
+          "explanation": "When ) arrives the top of the stack is [, so the pair does not match." },
+        { "id": "b-d-stack-3", "question": "Which structure powers the function call stack?",
+          "options": ["Queue", "Stack", "Heap", "Hash map"], "answerIndex": 1,
+          "explanation": "Calls return in reverse order of how they were made: last in, first out." }
+      ] },
+    { "topicId": "d-queue",
+      "keyPoints": [
+        "A queue is first-in, first-out: enqueue at the back and dequeue from the front.",
+        "A circular buffer reuses array slots with wrap-around indexes: (i + 1) % capacity.",
+        "A deque supports insertion and removal at both ends in O(1)."
+      ],
+      "questions": [
+        { "id": "b-d-queue-1", "question": "Which algorithm is built on a queue?",
+          "options": ["Depth-first search", "Binary search", "Breadth-first search", "Quicksort"], "answerIndex": 2,
+          "explanation": "BFS visits nodes in the order they were discovered: first in, first out." },
+        { "id": "b-d-queue-2", "question": "In a circular array of capacity k, the index after i is...",
+          "options": ["i + 1", "i * 2", "k - i", "(i + 1) % k"], "answerIndex": 3,
+          "explanation": "The modulo wraps the index back to 0 after k - 1." },
+        { "id": "b-d-queue-3", "question": "A deque allows...",
+          "options": ["Insertion and removal at both ends", "Only removal from the front", "Only random access", "Sorted insertion"], "answerIndex": 0,
+          "explanation": "Deque means double-ended queue." }
+      ] },
+    { "topicId": "d-hashing",
+      "keyPoints": [
+        "A hash function maps a key to an array index; lookups, inserts and deletes are O(1) on average.",
+        "Collisions (two keys with the same index) are handled by chaining or open addressing.",
+        "Use a map to count frequencies or to find a complement (two-sum) in one pass."
+      ],
+      "questions": [
+        { "id": "b-d-hashing-1", "question": "What is the average-case lookup time in a hash map?",
+          "options": ["O(n)", "O(1)", "O(log n)", "O(n log n)"], "answerIndex": 1,
+          "explanation": "The hash jumps almost directly to the right bucket." },
+        { "id": "b-d-hashing-2", "question": "What is a hash collision?",
+          "options": ["A table that has become completely full", "A lookup for a key that is missing", "Two keys mapping to the same index", "A table whose keys are sorted"], "answerIndex": 2,
+          "explanation": "Different keys can produce the same index, so the table needs a collision strategy." },
+        { "id": "b-d-hashing-3", "question": "Which structure best solves two-sum in O(n)?",
+          "options": ["Nested loops", "A stack", "A plain binary tree", "A hash map from value to index"], "answerIndex": 3,
+          "explanation": "For each number, check in O(1) whether target - number was already seen." }
+      ] },
+    { "topicId": "d-recursion",
+      "keyPoints": [
+        "Every recursive function needs a base case that stops and a recursive case that moves toward it.",
+        "Each call is pushed onto the call stack; a missing base case causes a stack overflow.",
+        "Solve the smallest case first, then assume the function already works for smaller inputs."
+      ],
+      "questions": [
+        { "id": "b-d-recursion-1", "question": "What happens if a recursive function has no reachable base case?",
+          "options": ["A stack overflow", "It returns 0", "It stops silently", "It becomes iterative"], "answerIndex": 0,
+          "explanation": "Calls keep piling up on the call stack until memory runs out." },
+        { "id": "b-d-recursion-2", "question": "For factorial(n) = n * factorial(n - 1), which is a correct base case?",
+          "options": ["n == 10 returns 0", "n == 0 returns 1", "n < 0 returns n", "No base case is needed"], "answerIndex": 1,
+          "explanation": "0! = 1 stops the recursion." },
+        { "id": "b-d-recursion-3", "question": "Where do the local variables of recursive calls live?",
+          "options": ["In a file", "In the heap only", "On the call stack", "In registers permanently"], "answerIndex": 2,
+          "explanation": "Each call gets its own stack frame." }
+      ] },
+    { "topicId": "d-binsearch",
+      "keyPoints": [
+        "Binary search needs sorted data and halves the search range each step: O(log n).",
+        "Compute the middle as lo + (hi - lo) / 2 to avoid integer overflow.",
+        "Binary search on the answer finds the smallest value that satisfies a monotonic condition."
+      ],
+      "questions": [
+        { "id": "b-d-binsearch-1", "question": "Binary search requires the data to be...",
+          "options": ["Unique", "Positive", "Stored in a hash map", "Sorted"], "answerIndex": 3,
+          "explanation": "Discarding half the range is only valid when the order is known." },
+        { "id": "b-d-binsearch-2", "question": "What is the time complexity of binary search?",
+          "options": ["O(log n)", "O(n)", "O(1)", "O(n log n)"], "answerIndex": 0,
+          "explanation": "The range halves each step, so about log2(n) steps." },
+        { "id": "b-d-binsearch-3", "question": "Why write mid = lo + (hi - lo) / 2?",
+          "options": ["It is faster", "To avoid overflow of lo + hi", "It sorts the array", "It rounds up"], "answerIndex": 1,
+          "explanation": "lo + hi can exceed the int range for very large arrays." }
+      ] },
+    { "topicId": "d-sort-basic",
+      "keyPoints": [
+        "Bubble, selection and insertion sort are O(n^2) in the worst case.",
+        "Insertion sort is O(n) on nearly sorted data and is stable.",
+        "A stable sort keeps equal elements in their original order; an in-place sort uses O(1) extra space."
+      ],
+      "questions": [
+        { "id": "b-d-sort-basic-1", "question": "What is the worst-case time of insertion sort?",
+          "options": ["O(n)", "O(n log n)", "O(n^2)", "O(log n)"], "answerIndex": 2,
+          "explanation": "On reverse-sorted input every element moves past all earlier ones." },
+        { "id": "b-d-sort-basic-2", "question": "What does 'stable' mean for a sorting algorithm?",
+          "options": ["It never crashes", "It uses no extra memory", "It is always O(n)", "Equal elements keep their relative order"], "answerIndex": 3,
+          "explanation": "Stability matters when sorting records by one key after another." },
+        { "id": "b-d-sort-basic-3", "question": "Which elementary sort makes at most n - 1 swaps?",
+          "options": ["Selection sort", "Bubble sort", "Insertion sort", "All of them"], "answerIndex": 0,
+          "explanation": "Selection sort does one swap per pass to place the minimum." }
+      ] },
+    { "topicId": "d-sort-adv",
+      "keyPoints": [
+        "Merge sort splits the array, sorts the halves recursively and merges them: O(n log n) always, O(n) extra space, stable.",
+        "Quicksort partitions around a pivot: O(n log n) on average, O(n^2) in the worst case, and it sorts in place.",
+        "Both use divide and conquer."
+      ],
+      "questions": [
+        { "id": "b-d-sort-adv-1", "question": "What is the worst-case time of quicksort?",
+          "options": ["O(n log n)", "O(n^2)", "O(n)", "O(log n)"], "answerIndex": 1,
+          "explanation": "Consistently bad pivots (for example on sorted input with a poor rule) give n levels of O(n) work." },
+        { "id": "b-d-sort-adv-2", "question": "Which sort guarantees O(n log n) and is stable?",
+          "options": ["Quicksort", "Selection sort", "Merge sort", "Bubble sort"], "answerIndex": 2,
+          "explanation": "Merge sort always splits evenly and its merge step keeps equal elements in order." },
+        { "id": "b-d-sort-adv-3", "question": "How much extra space does standard array merge sort need?",
+          "options": ["O(1)", "O(n^2)", "O(log n) only", "O(n)"], "answerIndex": 3,
+          "explanation": "Merging needs a temporary buffer as large as the data." }
+      ] },
+    { "topicId": "d-backtracking",
+      "keyPoints": [
+        "Backtracking builds a solution step by step and undoes (backtracks) a choice when it cannot lead to a solution.",
+        "The template is: choose, explore recursively, un-choose.",
+        "Pruning impossible branches early (for example attacked squares in N-Queens) saves time."
+      ],
+      "questions": [
+        { "id": "b-d-backtracking-1", "question": "How many subsets does a set of n distinct elements have?",
+          "options": ["2^n", "n", "n^2", "n!"], "answerIndex": 0,
+          "explanation": "Each element is either in or out of a subset, giving 2 choices n times." },
+        { "id": "b-d-backtracking-2", "question": "What is the 'un-choose' step in backtracking for?",
+          "options": ["Sorting the final list of results", "Restoring state so other choices can be tried", "Freeing memory used by the recursion", "Stopping the whole search early"], "answerIndex": 1,
+          "explanation": "The partial solution must return to its earlier state before trying the next option." },
+        { "id": "b-d-backtracking-3", "question": "How many permutations of n distinct elements are there?",
+          "options": ["2^n", "n^2", "n!", "n"], "answerIndex": 2,
+          "explanation": "n choices for the first slot, n-1 for the second, and so on." }
+      ] },
+    { "topicId": "d-trees",
+      "keyPoints": [
+        "A binary tree node has at most two children; the top node is the root and nodes without children are leaves.",
+        "Pre-order visits root, left, right; in-order visits left, root, right; post-order visits left, right, root.",
+        "Level-order traversal uses a queue and visits nodes level by level."
+      ],
+      "questions": [
+        { "id": "b-d-trees-1", "question": "Which traversal visits left subtree, then root, then right subtree?",
+          "options": ["Pre-order", "Post-order", "Level-order", "In-order"], "answerIndex": 3,
+          "explanation": "In-order puts the root between its two subtrees." },
+        { "id": "b-d-trees-2", "question": "Which data structure drives level-order traversal?",
+          "options": ["Queue", "Stack", "Heap", "Trie"], "answerIndex": 0,
+          "explanation": "A queue processes nodes in the order they were discovered, level by level." },
+        { "id": "b-d-trees-3", "question": "What is a leaf node?",
+          "options": ["The root", "A node with no children", "A node with two children", "A node with a sibling"], "answerIndex": 1,
+          "explanation": "Leaves are the nodes at the bottom with no children." }
+      ] },
+    { "topicId": "d-bst",
+      "keyPoints": [
+        "In a BST every value in the left subtree is smaller and every value in the right subtree is larger than the node.",
+        "Search, insert and delete take O(h), where h is the height: O(log n) if balanced, O(n) if skewed.",
+        "In-order traversal of a BST visits the values in sorted order."
+      ],
+      "questions": [
+        { "id": "b-d-bst-1", "question": "In-order traversal of a BST yields the values...",
+          "options": ["In reverse insertion order", "Randomly", "In sorted order", "Level by level"], "answerIndex": 2,
+          "explanation": "Left (smaller), node, right (larger) visits values in ascending order." },
+        { "id": "b-d-bst-2", "question": "What is the worst-case search time in an unbalanced BST?",
+          "options": ["O(1)", "O(log n)", "O(n log n)", "O(n)"], "answerIndex": 3,
+          "explanation": "A skewed tree is a chain, so search may visit every node." },
+        { "id": "b-d-bst-3", "question": "Inserting 5, then 3, then 8 into an empty BST: where does 3 go?",
+          "options": ["Left child of 5", "Right child of 5", "Root", "Left child of 8"], "answerIndex": 0,
+          "explanation": "3 < 5, so it becomes the left child of the root 5." }
+      ] },
+    { "topicId": "d-heap",
+      "keyPoints": [
+        "A binary heap is a complete tree stored in an array where each parent is <= (min-heap) or >= (max-heap) its children.",
+        "Insert and remove-top are O(log n); peeking at the top is O(1); building a heap from n items is O(n).",
+        "A priority queue is usually a heap; keep a min-heap of size k to find the k largest elements."
+      ],
+      "questions": [
+        { "id": "b-d-heap-1", "question": "What is the time to read the minimum of a min-heap?",
+          "options": ["O(log n)", "O(1)", "O(n)", "O(n log n)"], "answerIndex": 1,
+          "explanation": "The minimum is always at the root." },
+        { "id": "b-d-heap-2", "question": "Which structure usually implements a priority queue?",
+          "options": ["Linked list", "Stack", "Binary heap", "Hash set"], "answerIndex": 2,
+          "explanation": "A heap supports insert and extract-min in O(log n)." },
+        { "id": "b-d-heap-3", "question": "To find the k largest elements of a stream, a good approach is...",
+          "options": ["A max-heap of size 1", "A stack", "A queue", "A min-heap of size k"], "answerIndex": 3,
+          "explanation": "The heap keeps the k largest seen so far; its root is the smallest of them and gets evicted first." }
+      ] },
+    { "topicId": "d-trie",
+      "keyPoints": [
+        "A trie stores strings character by character along paths from the root.",
+        "Insert, search and prefix checks cost O(L), where L is the word length, regardless of how many words are stored.",
+        "Tries power autocomplete and prefix search."
+      ],
+      "questions": [
+        { "id": "b-d-trie-1", "question": "What is the time to look up a word of length L in a trie?",
+          "options": ["O(L)", "O(n)", "O(log n)", "O(L^2)"], "answerIndex": 0,
+          "explanation": "You follow one node per character." },
+        { "id": "b-d-trie-2", "question": "Tries are especially good for...",
+          "options": ["Numeric range sums", "Prefix queries and autocomplete", "Graph shortest paths", "Sorting integers"], "answerIndex": 1,
+          "explanation": "All words with a common prefix share the same path from the root." },
+        { "id": "b-d-trie-3", "question": "How does a trie mark the end of a stored word?",
+          "options": ["Deleting the node", "Adding a null child only", "An end-of-word flag on the node", "Storing the word length at the root"], "answerIndex": 2,
+          "explanation": "The path alone cannot tell a stored word from a prefix, so the node carries a flag." }
+      ] },
+    { "topicId": "d-balanced",
+      "keyPoints": [
+        "Inserting sorted data into a plain BST creates a skewed tree with O(n) operations.",
+        "Balanced trees (AVL, red-black) keep the height O(log n) using rotations.",
+        "AVL trees are more strictly balanced; red-black trees do fewer rotations and are used in, for example, Java's TreeMap."
+      ],
+      "questions": [
+        { "id": "b-d-balanced-1", "question": "Why can a plain BST become slow?",
+          "options": ["It stores duplicates", "It uses hashing", "It needs sorting first", "Inserting sorted data makes it a chain"], "answerIndex": 3,
+          "explanation": "Each new value goes to the same side, so the height becomes n." },
+        { "id": "b-d-balanced-2", "question": "Which operation restores balance in an AVL tree?",
+          "options": ["Rotation", "Hashing", "Sorting", "Rehashing"], "answerIndex": 0,
+          "explanation": "Rotations rearrange nodes locally to reduce the height." },
+        { "id": "b-d-balanced-3", "question": "Which Java collection is backed by a red-black tree?",
+          "options": ["HashMap", "TreeMap", "ArrayList", "LinkedList"], "answerIndex": 1,
+          "explanation": "TreeMap keeps keys sorted using a red-black tree." }
+      ] },
+    { "topicId": "d-graph-rep",
+      "keyPoints": [
+        "A graph has vertices (nodes) and edges; edges may be directed or undirected and may carry weights.",
+        "An adjacency list stores each vertex's neighbours: O(V + E) space, good for sparse graphs.",
+        "An adjacency matrix uses O(V^2) space but checks whether an edge u-v exists in O(1)."
+      ],
+      "questions": [
+        { "id": "b-d-graph-rep-1", "question": "How much space does an adjacency list use?",
+          "options": ["O(V^2)", "O(E^2)", "O(V + E)", "O(1)"], "answerIndex": 2,
+          "explanation": "One list entry per vertex plus one entry per edge." },
+        { "id": "b-d-graph-rep-2", "question": "Which representation checks whether an edge exists in O(1)?",
+          "options": ["Adjacency list", "Edge list only", "Linked list", "Adjacency matrix"], "answerIndex": 3,
+          "explanation": "matrix[u][v] is a direct array lookup." },
+        { "id": "b-d-graph-rep-3", "question": "A graph with far fewer edges than V^2 is called...",
+          "options": ["Sparse", "Dense", "Complete", "Cyclic"], "answerIndex": 0,
+          "explanation": "Sparse graphs are best stored as adjacency lists." }
+      ] },
+    { "topicId": "d-bfs-dfs",
+      "keyPoints": [
+        "BFS explores level by level using a queue; DFS goes deep first using recursion or a stack.",
+        "Both run in O(V + E) with an adjacency list and need a visited set to avoid looping.",
+        "BFS finds shortest paths in unweighted graphs; DFS is useful for connected components and cycle detection."
+      ],
+      "questions": [
+        { "id": "b-d-bfs-dfs-1", "question": "Which finds the path with the fewest edges in an unweighted graph?",
+          "options": ["DFS", "BFS", "Binary search", "Quicksort"], "answerIndex": 1,
+          "explanation": "BFS reaches every vertex in order of distance from the start." },
+        { "id": "b-d-bfs-dfs-2", "question": "What is the time complexity of BFS on an adjacency list?",
+          "options": ["O(V^2)", "O(E log V)", "O(V + E)", "O(V * E)"], "answerIndex": 2,
+          "explanation": "Each vertex and each edge is processed once." },
+        { "id": "b-d-bfs-dfs-3", "question": "Why keep a visited set in graph traversal?",
+          "options": ["To sort the nodes", "To count edges", "To use less recursion", "To avoid revisiting nodes and looping forever"], "answerIndex": 3,
+          "explanation": "Graphs can contain cycles, so without it the traversal may never end." }
+      ] },
+    { "topicId": "d-topo",
+      "keyPoints": [
+        "A topological order lists the vertices of a directed acyclic graph (DAG) so that every edge goes from an earlier to a later vertex.",
+        "Kahn's algorithm repeatedly removes vertices with in-degree 0 using a queue.",
+        "If not all vertices get removed, the graph contains a cycle."
+      ],
+      "questions": [
+        { "id": "b-d-topo-1", "question": "A topological ordering exists only for...",
+          "options": ["Directed acyclic graphs", "Undirected graphs", "Complete graphs", "Weighted graphs only"], "answerIndex": 0,
+          "explanation": "A cycle would require some vertex to come before itself." },
+        { "id": "b-d-topo-2", "question": "Kahn's algorithm starts with the vertices that have...",
+          "options": ["Out-degree 0", "In-degree 0", "The highest degree", "A random degree"], "answerIndex": 1,
+          "explanation": "Vertices with no incoming edges have no prerequisites and can come first." },
+        { "id": "b-d-topo-3", "question": "Kahn's algorithm processes fewer than V vertices. What does that mean?",
+          "options": ["The graph is a tree", "The graph is empty", "The graph has a cycle", "The algorithm is correct"], "answerIndex": 2,
+          "explanation": "Vertices on a cycle never reach in-degree 0." }
+      ] },
+    { "topicId": "d-shortest",
+      "keyPoints": [
+        "BFS gives shortest paths when all edges have the same weight.",
+        "Dijkstra's algorithm uses a min-priority queue and repeatedly settles the closest unsettled vertex; it needs non-negative weights.",
+        "Dijkstra runs in O((V + E) log V) with a binary heap."
+      ],
+      "questions": [
+        { "id": "b-d-shortest-1", "question": "Dijkstra's algorithm requires edge weights to be...",
+          "options": ["Integers", "Equal", "Sorted", "Non-negative"], "answerIndex": 3,
+          "explanation": "A negative edge could make an already settled vertex reachable more cheaply." },
+        { "id": "b-d-shortest-2", "question": "Which data structure makes Dijkstra's algorithm efficient?",
+          "options": ["A min-priority queue", "A stack", "A queue", "A trie"], "answerIndex": 0,
+          "explanation": "It picks the unsettled vertex with the smallest distance in O(log V)." },
+        { "id": "b-d-shortest-3", "question": "The shortest path in an unweighted graph is best found with...",
+          "options": ["DFS", "BFS", "Kruskal's algorithm", "Topological sort"], "answerIndex": 1,
+          "explanation": "BFS is linear time and needs no priority queue." }
+      ] },
+    { "topicId": "d-mst",
+      "keyPoints": [
+        "A minimum spanning tree connects all vertices of a weighted undirected graph with minimum total weight and no cycles.",
+        "Kruskal's algorithm sorts the edges and adds the cheapest edge that does not form a cycle, using union-find.",
+        "Union-find supports find and union in nearly O(1) with path compression and union by rank."
+      ],
+      "questions": [
+        { "id": "b-d-mst-1", "question": "How many edges does an MST of a connected graph with V vertices have?",
+          "options": ["V", "V + 1", "V - 1", "2V"], "answerIndex": 2,
+          "explanation": "A tree on V vertices has exactly V - 1 edges." },
+        { "id": "b-d-mst-2", "question": "Which structure detects cycles in Kruskal's algorithm?",
+          "options": ["A stack", "A queue", "A trie", "Union-find"], "answerIndex": 3,
+          "explanation": "If two endpoints are already in the same set, adding the edge would create a cycle." },
+        { "id": "b-d-mst-3", "question": "What does Kruskal's algorithm do first?",
+          "options": ["Sorts the edges by weight", "Picks a random vertex", "Runs BFS", "Builds a heap of all vertices"], "answerIndex": 0,
+          "explanation": "It considers edges from cheapest to most expensive." }
+      ] },
+    { "topicId": "d-greedy",
+      "keyPoints": [
+        "A greedy algorithm makes the locally best choice at each step and never reconsiders.",
+        "Interval scheduling: sort by end time and pick each interval that starts after the last chosen one ends.",
+        "Greedy fails for problems such as coin change with arbitrary coin values; use dynamic programming there."
+      ],
+      "questions": [
+        { "id": "b-d-greedy-1", "question": "To select the maximum number of non-overlapping intervals greedily, sort by...",
+          "options": ["Start time", "End time", "Length", "Random order"], "answerIndex": 1,
+          "explanation": "Finishing earliest leaves the most room for the remaining intervals." },
+        { "id": "b-d-greedy-2", "question": "With coins {1, 3, 4} and amount 6, greedy picks 4 + 1 + 1. What is the optimal number of coins?",
+          "options": ["3 coins", "4 coins", "2 coins (3 + 3)", "6 coins"], "answerIndex": 2,
+          "explanation": "3 + 3 uses two coins, so greedy is not optimal here." },
+        { "id": "b-d-greedy-3", "question": "A greedy algorithm is guaranteed correct when...",
+          "options": ["It runs in O(n)", "It uses recursion", "It uses a heap", "The greedy-choice property holds"], "answerIndex": 3,
+          "explanation": "The locally best choice must always be part of some optimal solution." }
+      ] },
+    { "topicId": "d-dp-intro",
+      "keyPoints": [
+        "Dynamic programming applies when a problem has overlapping subproblems and optimal substructure.",
+        "Memoization is top-down: cache the results of recursive calls. Tabulation is bottom-up: fill a table in order.",
+        "Naive Fibonacci recursion is exponential; dynamic programming makes it O(n)."
+      ],
+      "questions": [
+        { "id": "b-d-dp-intro-1", "question": "What does memoization mean?",
+          "options": ["Caching the results of subproblems", "Sorting subproblems", "Replacing recursion with threads", "Making a greedy choice"], "answerIndex": 0,
+          "explanation": "Each subproblem is solved once and its answer is reused." },
+        { "id": "b-d-dp-intro-2", "question": "Naive recursive Fibonacci runs in about...",
+          "options": ["O(n)", "O(2^n)", "O(log n)", "O(n^2)"], "answerIndex": 1,
+          "explanation": "The same values are recomputed over and over, so the call tree grows exponentially." },
+        { "id": "b-d-dp-intro-3", "question": "Bottom-up DP fills its table...",
+          "options": ["From the answer downward only", "Randomly", "From the base cases upward to the answer", "Using a stack of calls"], "answerIndex": 2,
+          "explanation": "Each entry depends only on entries that were already filled." }
+      ] },
+    { "topicId": "d-dp-1d",
+      "keyPoints": [
+        "Define dp[i] clearly, for example the best answer using the first i items.",
+        "Climbing stairs: dp[i] = dp[i-1] + dp[i-2]. House robber: dp[i] = max(dp[i-1], dp[i-2] + nums[i]).",
+        "Coin change: dp[a] = 1 + min(dp[a - coin]) over the coins; the standard LIS dynamic program is O(n^2)."
+      ],
+      "questions": [
+        { "id": "b-d-dp-1d-1", "question": "Climbing stairs with steps of 1 or 2: how many ways to reach step 4?",
+          "options": ["3", "4", "8", "5"], "answerIndex": 3,
+          "explanation": "ways(1)=1, ways(2)=2, ways(3)=3, ways(4)=5: each is the sum of the previous two." },
+        { "id": "b-d-dp-1d-2", "question": "What is the house robber recurrence for dp[i]?",
+          "options": ["max(dp[i-1], dp[i-2] + nums[i])", "dp[i-1] + nums[i]", "min(dp[i-1], dp[i-2])", "dp[i-1] * nums[i]"], "answerIndex": 0,
+          "explanation": "Either skip house i, or rob it and add the best from two houses back." },
+        { "id": "b-d-dp-1d-3", "question": "What is the time complexity of the coin change DP for amount A and n coins?",
+          "options": ["O(A)", "O(A * n)", "O(n^2)", "O(2^A)"], "answerIndex": 1,
+          "explanation": "For each amount up to A it tries each of the n coins." }
+      ] },
+    { "topicId": "d-dp-2d",
+      "keyPoints": [
+        "A 2-D table such as dp[i][j] often indexes prefixes of two strings or positions in a grid.",
+        "LCS: if the characters match, dp[i][j] = dp[i-1][j-1] + 1; otherwise max(dp[i-1][j], dp[i][j-1]).",
+        "0/1 knapsack: dp[i][w] = max(skip item i, take item i if it fits); edit distance takes the minimum of insert, delete and replace."
+      ],
+      "questions": [
+        { "id": "b-d-dp-2d-1", "question": "What is the time complexity of LCS for strings of lengths m and n?",
+          "options": ["O(m + n)", "O(log m)", "O(m * n)", "O(2^(m+n))"], "answerIndex": 2,
+          "explanation": "The table has m * n cells and each takes constant time." },
+        { "id": "b-d-dp-2d-2", "question": "In 0/1 knapsack, each item can be used...",
+          "options": ["Any number of times", "Exactly twice", "Fractionally", "At most once"], "answerIndex": 3,
+          "explanation": "0/1 means each item is either taken or left." },
+        { "id": "b-d-dp-2d-3", "question": "Which operations does edit distance allow?",
+          "options": ["Insert, delete and replace", "Sort and merge", "Push and pop", "Rotate only"], "answerIndex": 0,
+          "explanation": "The edit distance is the minimum number of insertions, deletions and replacements." }
+      ] }
+  ]
+}

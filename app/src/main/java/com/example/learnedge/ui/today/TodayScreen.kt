@@ -41,7 +41,7 @@ private val DAY_FORMAT = DateTimeFormatter.ofPattern("EEEE, d MMMM")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodayScreen(onEditProfile: () -> Unit, viewModel: TodayViewModel = viewModel()) {
+fun TodayScreen(onEditProfile: () -> Unit, onOpenTopic: (String) -> Unit, viewModel: TodayViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
@@ -73,7 +73,12 @@ fun TodayScreen(onEditProfile: () -> Unit, viewModel: TodayViewModel = viewModel
                 item { SummaryCard(state, onRegenerate = viewModel::regenerateTips) }
             }
             items(state.items, key = { it.id }) { item ->
-                TodayItem(item, tip = state.tips?.tips?.get(item.topicId), onCheckedChange = { viewModel.setDone(item.id, it) })
+                TodayItem(
+                    item,
+                    tip = state.tips?.tips?.get(item.topicId),
+                    onOpen = { onOpenTopic(item.topicId) },
+                    onCheckedChange = { viewModel.setDone(item.id, it) },
+                )
             }
         }
     }
@@ -144,9 +149,10 @@ private fun SourceLabel(source: TipSource) {
 }
 
 @Composable
-private fun TodayItem(item: StudyItemUi, tip: Tip?, onCheckedChange: (Boolean) -> Unit) {
+private fun TodayItem(item: StudyItemUi, tip: Tip?, onOpen: () -> Unit, onCheckedChange: (Boolean) -> Unit) {
     Card(
-        Modifier.fillMaxWidth(),
+        onClick = onOpen,
+        modifier = Modifier.fillMaxWidth(),
         colors = if (item.done) {
             CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
         } else {

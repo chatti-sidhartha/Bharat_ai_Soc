@@ -19,11 +19,17 @@ import androidx.room.RoomDatabase
         StudyPlanEntity::class,
         PlanItemEntity::class,
         DailyTipEntity::class,
+        TopicLessonEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
     // Schema changes are migrated, never destructive: learner data must survive app updates.
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4),
+        AutoMigration(from = 4, to = 5),
+    ],
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun curriculumDao(): CurriculumDao
@@ -31,6 +37,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
     abstract fun planDao(): PlanDao
     abstract fun tipDao(): TipDao
+    abstract fun lessonDao(): LessonDao
 
     companion object {
         const val NAME = "learnedge.db"

@@ -2,10 +2,12 @@ package com.example.learnedge
 
 import android.app.Application
 import android.content.Context
+import com.example.learnedge.data.content.ContentRepository
 import com.example.learnedge.data.curriculum.CurriculumRepository
 import com.example.learnedge.data.db.AppDatabase
 import com.example.learnedge.data.diagnostic.DiagnosticRepository
 import com.example.learnedge.data.learner.LearnerStateRepository
+import com.example.learnedge.data.lessons.LessonRepository
 import com.example.learnedge.data.plan.PlanRepository
 import com.example.learnedge.data.profile.ProfileRepository
 import com.example.learnedge.data.tips.TipsRepository
@@ -43,6 +45,10 @@ class AppContainer(context: Context) {
     val benchmarkLog = BenchmarkLog(context)
     val recorder = GenerationRecorder(context, benchmarkLog)
     val tips = TipsRepository(database, llm, recorder, appScope)
+
+    /** Hand-written key points and question bank, bundled in assets. */
+    val content = ContentRepository(context.assets)
+    val lessons = LessonRepository(database, llm, recorder, appScope)
 }
 
 val Context.appContainer: AppContainer get() = (applicationContext as LearnEdgeApp).container

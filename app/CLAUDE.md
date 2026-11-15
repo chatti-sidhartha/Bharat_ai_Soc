@@ -12,7 +12,7 @@ skill gaps, recommends personalized learning pathways, generates study plans and
 on an Arm Android smartphone.
 
 **Deliverables:** source code, Android app, demonstration video, technical report.
-**Submission deadline:** 30 November 2026.
+**Submission deadline:** 23 November 2026 (confirmed by the user on 15 Nov 2026; earlier notes said 30 Nov).
 
 ## 2. Fixed design (approved in the review documents; do not change)
 
@@ -135,5 +135,6 @@ M1 Lessons + question bank -> M2 Topic quiz + BKT loop -> M3 Progress, knowledge
 -> M4 Night Shift pre-generation -> M5 Hardening + final benchmarks -> M6 Technical report
 -> M7 Demo video -> M8 Submission.
 
-Submission deadline per the user's roadmap message: 23 Nov 2026 (section 1 above still says 30 Nov;
-see the open question in the report of 15 Nov).
+Submission deadline: 23 Nov 2026 (confirmed by the user). The feature freeze of 25 Nov in standing
+order 8 falls after that date, so the user is finishing the milestones as fast as possible instead of
+one per day; the freeze date has not been revised by the user.

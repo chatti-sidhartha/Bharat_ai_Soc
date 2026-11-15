@@ -18,11 +18,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.learnedge.ui.lesson.LessonScreen
 import com.example.learnedge.ui.plan.PlanScreen
 import com.example.learnedge.ui.progress.ProgressScreen
 import com.example.learnedge.ui.today.TodayScreen
 import com.example.learnedge.ui.tutor.ChatScreen
 import com.example.learnedge.ui.tutor.ChatViewModel
+
+/** A topic's lesson, opened from Today or Plan. It is not a tab, so no bottom-bar item is selected on it. */
+private const val LESSON_ROUTE = "lesson/{topicId}"
 
 /** Bottom-bar destinations. The icon is an emoji so no icon library is needed. */
 enum class Tab(val route: String, val label: String, val icon: String) {
@@ -38,6 +42,7 @@ fun MainScreen(onEditProfile: () -> Unit) {
     // Scoped to the activity, not a destination, so the on-device model stays loaded across tabs and screens.
     val activity = LocalContext.current as ComponentActivity
     val chatViewModel: ChatViewModel = viewModel(viewModelStoreOwner = activity)
+    val openTopic: (String) -> Unit = { topicId -> navController.navigate("lesson/$topicId") }
 
     Scaffold(bottomBar = { BottomBar(navController) }) { padding ->
         NavHost(
@@ -45,10 +50,11 @@ fun MainScreen(onEditProfile: () -> Unit) {
             startDestination = Tab.Today.route,
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
-            composable(Tab.Today.route) { TodayScreen(onEditProfile) }
-            composable(Tab.Plan.route) { PlanScreen() }
+            composable(Tab.Today.route) { TodayScreen(onEditProfile, onOpenTopic = openTopic) }
+            composable(Tab.Plan.route) { PlanScreen(onOpenTopic = openTopic) }
             composable(Tab.Tutor.route) { ChatScreen(chatViewModel) }
             composable(Tab.Progress.route) { ProgressScreen() }
+            composable(LESSON_ROUTE) { LessonScreen(onBack = { navController.popBackStack() }) }
         }
     }
 }

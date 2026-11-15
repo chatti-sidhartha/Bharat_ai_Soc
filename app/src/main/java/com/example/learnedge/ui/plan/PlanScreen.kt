@@ -1,5 +1,6 @@
 package com.example.learnedge.ui.plan
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,7 +36,7 @@ private val DEADLINE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlanScreen(viewModel: PlanViewModel = viewModel()) {
+fun PlanScreen(onOpenTopic: (String) -> Unit, viewModel: PlanViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Scaffold(topBar = { TopAppBar(title = { Text("Study plan") }) }) { padding ->
         if (state.loading) {
@@ -48,7 +49,7 @@ fun PlanScreen(viewModel: PlanViewModel = viewModel()) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item { Summary(state, onRegenerate = viewModel::regenerate) }
-            items(state.days, key = { it.date.toEpochDay() }) { day -> DayCard(day) }
+            items(state.days, key = { it.date.toEpochDay() }) { day -> DayCard(day, onOpenTopic) }
             if (state.deferred.isNotEmpty()) {
                 item {
                     Text("Deferred (${state.deferred.size})", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
@@ -83,7 +84,7 @@ private fun Summary(state: PlanUiState, onRegenerate: () -> Unit) {
 }
 
 @Composable
-private fun DayCard(day: PlanDayUi) {
+private fun DayCard(day: PlanDayUi, onOpenTopic: (String) -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -92,12 +93,14 @@ private fun DayCard(day: PlanDayUi) {
             }
             HorizontalDivider()
             day.items.forEach { item ->
-                Text(
-                    (if (item.done) "✓ " else "• ") + item.topicName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textDecoration = if (item.done) TextDecoration.LineThrough else null,
-                )
-                Text(item.detailLine(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(Modifier.fillMaxWidth().clickable { onOpenTopic(item.topicId) }) {
+                    Text(
+                        (if (item.done) "✓ " else "• ") + item.topicName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textDecoration = if (item.done) TextDecoration.LineThrough else null,
+                    )
+                    Text(item.detailLine(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }
