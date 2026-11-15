@@ -24,6 +24,8 @@ data class Topic(
     val skillId: String,
     val estimatedMinutes: Int,
     val description: String = "",
+    /** 3-5 short factual statements: the ground truth lessons are built from. */
+    val keyPoints: List<String> = emptyList(),
 ) {
     init {
         require(id.isNotBlank()) { "Topic id must not be blank" }

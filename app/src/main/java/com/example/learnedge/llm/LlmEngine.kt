@@ -17,9 +17,10 @@ interface LlmEngine {
 
     /**
      * Generates a completion for an already-formatted [prompt]. [onToken] is called for every
-     * token, possibly from a background thread. Returns timing stats for this call.
+     * token, possibly from a background thread. [temperature] applies to this call only. Returns
+     * timing stats for this call.
      */
-    suspend fun generate(prompt: String, onToken: (String) -> Unit): GenerationStats
+    suspend fun generate(prompt: String, temperature: Float = ModelConfig.TEMPERATURE, onToken: (String) -> Unit): GenerationStats
 
     /** Requests the current generation to stop early. Safe to call from any thread. */
     fun stop()

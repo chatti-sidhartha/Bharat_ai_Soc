@@ -23,6 +23,7 @@ class CurriculumRepository(private val db: AppDatabase, private val assets: Asse
     private val seedLock = Mutex()
     @Volatile private var seeded = false
     private val cache = HashMap<String, Track>()
+    @Volatile private var keyPointCache: Map<String, List<String>>? = null
 
     /** Inserts the curriculum on first launch. Every read calls this, so callers never see an empty database. */
     suspend fun seedIfEmpty() = seedLock.withLock {
@@ -45,6 +46,7 @@ class CurriculumRepository(private val db: AppDatabase, private val assets: Asse
     suspend fun track(trackId: String): Track {
         seedIfEmpty()
         synchronized(cache) { cache[trackId] }?.let { return it }
+        val keyPoints = keyPointsByTopic()
         val entity = dao.tracks().firstOrNull { it.id == trackId } ?: throw NoSuchElementException("Unknown track $trackId")
         val edges = dao.prerequisites(trackId).groupBy({ it.topicId }, { it.prerequisiteId })
         val track = Track(
@@ -52,13 +54,26 @@ class CurriculumRepository(private val db: AppDatabase, private val assets: Asse
             name = entity.name,
             skills = dao.skills(trackId).map { Skill(it.id, it.name, it.targetLevel, it.weight) },
             graph = KnowledgeGraph(
-                topics = dao.topics(trackId).map { Topic(it.id, it.name, it.skillId, it.estimatedMinutes, it.description) },
+                topics = dao.topics(trackId).map {
+                    Topic(it.id, it.name, it.skillId, it.estimatedMinutes, it.description, keyPoints[it.id].orEmpty())
+                },
                 prerequisites = edges.mapValues { it.value.toSet() },
             ),
         )
         synchronized(cache) { cache[trackId] = track }
         return track
     }
+
+    /**
+     * Key points live in the asset only (not in Room), so they reach existing installs without a
+     * migration and can be edited by editing curriculum.json.
+     */
+    private suspend fun keyPointsByTopic(): Map<String, List<String>> =
+        keyPointCache ?: withContext(Dispatchers.IO) {
+            CurriculumParser.parse(assets.open(ASSET).bufferedReader().use { it.readText() })
+                .flatMap { it.graph.topics }
+                .associate { it.id to it.keyPoints }
+        }.also { keyPointCache = it }
 
     private suspend fun insert(tracks: List<Track>) {
         dao.insertTracks(tracks.mapIndexed { i, t -> TrackEntity(t.id, t.name, i) })

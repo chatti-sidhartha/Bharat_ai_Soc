@@ -10,6 +10,9 @@ object ModelConfig {
 
     const val TEMPERATURE = 0.7f
 
+    /** Recorded with every generated text so it can be traced to the model that wrote it. */
+    const val ON_DEVICE_MODEL_ID = "llama-3.2-1b-instruct-spinquant-int4-et"
+
     /** Max total tokens (prompt + output). The runner also caps this at the model's context length. */
     const val SEQ_LEN = 1536
 

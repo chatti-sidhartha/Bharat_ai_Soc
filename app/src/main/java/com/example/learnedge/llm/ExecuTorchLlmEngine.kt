@@ -55,7 +55,7 @@ class ExecuTorchLlmEngine(private val files: ModelFiles) : LlmEngine {
         Log.i(TAG, "Model loaded in $loadTimeMs ms from ${files.model}")
     }
 
-    override suspend fun generate(prompt: String, onToken: (String) -> Unit): GenerationStats =
+    override suspend fun generate(prompt: String, temperature: Float, onToken: (String) -> Unit): GenerationStats =
         withContext(dispatcher) {
             val m = module ?: throw LlmException("Model is not loaded")
             // Each prompt carries its own history, so start from an empty KV cache.
@@ -65,7 +65,7 @@ class ExecuTorchLlmEngine(private val files: ModelFiles) : LlmEngine {
             var nativeError: String? = null
             val config = LlmGenerationConfig.create()
                 .seqLen(ModelConfig.SEQ_LEN)
-                .temperature(ModelConfig.TEMPERATURE)
+                .temperature(temperature)
                 .echo(false)
                 .build()
             try {

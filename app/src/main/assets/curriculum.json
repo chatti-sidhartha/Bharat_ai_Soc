@@ -13,80 +13,255 @@
       ],
       "topics": [
         { "id": "j-basics", "name": "Java Basics", "skillId": "java", "estimatedMinutes": 60, "prerequisites": [],
-          "description": "Program structure, primitive types, variables, operators and console output." },
+          "description": "Program structure, primitive types, variables, operators and console output.",
+          "keyPoints": [
+            "Every Java program starts at public static void main(String[] args) inside a class.",
+            "Primitive types (int, double, boolean, char, long) hold values directly; String is a class, not a primitive.",
+            "Integer division truncates: 7 / 2 is 3, while 7 / 2.0 is 3.5."
+          ] },
         { "id": "j-control", "name": "Control Flow", "skillId": "java", "estimatedMinutes": 45, "prerequisites": ["j-basics"],
-          "description": "if/else, switch, for, while and do-while loops, break and continue." },
+          "description": "if/else, switch, for, while and do-while loops, break and continue.",
+          "keyPoints": [
+            "if/else chooses a branch; switch selects among constants and needs break (or the arrow syntax) to avoid fall-through.",
+            "Use for when the number of iterations is known, while when it depends on a condition, and do-while when the body must run at least once.",
+            "break leaves the loop; continue skips to the next iteration."
+          ] },
         { "id": "j-methods", "name": "Methods & Arrays", "skillId": "java", "estimatedMinutes": 60, "prerequisites": ["j-control"],
-          "description": "Defining methods, parameters, return values, overloading and working with arrays." },
+          "description": "Defining methods, parameters, return values, overloading and working with arrays.",
+          "keyPoints": [
+            "Java passes arguments by value: a method gets a copy of a primitive, or a copy of an object reference.",
+            "Overloading means the same method name with different parameter lists; the return type alone cannot tell overloads apart.",
+            "Array indexes start at 0, the last valid index is length - 1, and an array's size is fixed."
+          ] },
         { "id": "j-strings", "name": "Strings & StringBuilder", "skillId": "java", "estimatedMinutes": 45, "prerequisites": ["j-methods"],
-          "description": "String immutability, common String methods, formatting and StringBuilder." },
+          "description": "String immutability, common String methods, formatting and StringBuilder.",
+          "keyPoints": [
+            "String objects are immutable: methods such as toUpperCase() return a new String.",
+            "Compare String contents with equals(), not ==, which compares references.",
+            "Use StringBuilder to build strings in loops; repeated + creates many temporary objects."
+          ] },
         { "id": "j-oop", "name": "Classes & Objects", "skillId": "java", "estimatedMinutes": 90, "prerequisites": ["j-methods"],
-          "description": "Fields, constructors, methods, encapsulation, static members and object references." },
+          "description": "Fields, constructors, methods, encapsulation, static members and object references.",
+          "keyPoints": [
+            "A class is a blueprint; an object is an instance created with new, and a constructor initializes it.",
+            "Encapsulation: keep fields private and expose behavior through public methods.",
+            "static members belong to the class itself, not to any single object."
+          ] },
         { "id": "j-inherit", "name": "Inheritance & Polymorphism", "skillId": "java", "estimatedMinutes": 75, "prerequisites": ["j-oop"],
-          "description": "extends, method overriding, super, dynamic dispatch and the Object class." },
+          "description": "extends, method overriding, super, dynamic dispatch and the Object class.",
+          "keyPoints": [
+            "A subclass uses extends to inherit fields and methods; super refers to the parent class.",
+            "Overriding replaces a parent method in the subclass; the version that runs depends on the real object type (dynamic dispatch).",
+            "Every class extends Object, which provides toString(), equals() and hashCode()."
+          ] },
         { "id": "j-interfaces", "name": "Interfaces & Abstract Classes", "skillId": "java", "estimatedMinutes": 60, "prerequisites": ["j-inherit"],
-          "description": "Abstract classes, interfaces, default methods and programming to an interface." },
+          "description": "Abstract classes, interfaces, default methods and programming to an interface.",
+          "keyPoints": [
+            "An interface declares what a type can do; a class implements it and can implement many interfaces.",
+            "An abstract class can hold state and partial implementation but cannot be instantiated; a class can extend only one class.",
+            "Program to an interface (List<String> x = new ArrayList<>()) so implementations can be swapped."
+          ] },
         { "id": "j-exceptions", "name": "Exception Handling", "skillId": "java", "estimatedMinutes": 60, "prerequisites": ["j-oop"],
-          "description": "try/catch/finally, checked vs unchecked exceptions, try-with-resources, custom exceptions." },
+          "description": "try/catch/finally, checked vs unchecked exceptions, try-with-resources, custom exceptions.",
+          "keyPoints": [
+            "Checked exceptions (such as IOException) must be caught or declared; unchecked ones extend RuntimeException.",
+            "finally runs whether or not an exception occurs; try-with-resources closes AutoCloseable resources automatically.",
+            "Catch specific exceptions first and never swallow them silently."
+          ] },
         { "id": "j-generics", "name": "Generics", "skillId": "java", "estimatedMinutes": 60, "prerequisites": ["j-interfaces"],
-          "description": "Generic classes and methods, type parameters, bounded types and wildcards." },
+          "description": "Generic classes and methods, type parameters, bounded types and wildcards.",
+          "keyPoints": [
+            "Generics add compile-time type safety: List<String> only holds Strings, so no casts are needed.",
+            "A type parameter such as <T> makes a class or method reusable; a bound like <T extends Number> limits it.",
+            "List<Integer> is not a List<Number>; use wildcards such as List<? extends Number> to accept both."
+          ] },
         { "id": "j-collections", "name": "Collections Framework", "skillId": "java", "estimatedMinutes": 90, "prerequisites": ["j-generics"],
-          "description": "List, Set, Map and Queue, ArrayList vs LinkedList, HashMap, iteration, equals and hashCode." },
+          "description": "List, Set, Map and Queue, ArrayList vs LinkedList, HashMap, iteration, equals and hashCode.",
+          "keyPoints": [
+            "List keeps order and allows duplicates; Set rejects duplicates; Map stores key-value pairs with unique keys.",
+            "HashMap and HashSet need consistent equals() and hashCode(); lookups are O(1) on average.",
+            "ArrayList gives fast index access; LinkedList is better only for frequent insertion and removal at the ends."
+          ] },
         { "id": "j-lambdas", "name": "Lambdas & Streams", "skillId": "java", "estimatedMinutes": 90, "prerequisites": ["j-collections"],
-          "description": "Functional interfaces, lambdas, method references and the Stream API (map, filter, collect)." },
+          "description": "Functional interfaces, lambdas, method references and the Stream API (map, filter, collect).",
+          "keyPoints": [
+            "A lambda is a short implementation of a functional interface (one abstract method), for example x -> x * 2.",
+            "Streams process data in a pipeline: a source, intermediate operations (filter, map) and a terminal operation (collect, forEach).",
+            "Intermediate stream operations are lazy; nothing runs until a terminal operation is called."
+          ] },
         { "id": "j-concurrency", "name": "Concurrency Basics", "skillId": "java", "estimatedMinutes": 90, "prerequisites": ["j-lambdas", "j-exceptions"],
-          "description": "Threads, ExecutorService, synchronization, thread safety and CompletableFuture." },
+          "description": "Threads, ExecutorService, synchronization, thread safety and CompletableFuture.",
+          "keyPoints": [
+            "Threads run concurrently; shared mutable state needs synchronization (synchronized, locks, atomic classes) to avoid race conditions.",
+            "Prefer an ExecutorService thread pool to creating threads by hand.",
+            "CompletableFuture chains asynchronous steps (supplyAsync, thenApply) without blocking."
+          ] },
 
         { "id": "g-cli", "name": "Command Line Basics", "skillId": "git", "estimatedMinutes": 30, "prerequisites": [],
-          "description": "Navigating folders, running programs and reading output in a terminal." },
+          "description": "Navigating folders, running programs and reading output in a terminal.",
+          "keyPoints": [
+            "pwd shows the current folder, ls (dir on Windows) lists files and cd changes folder.",
+            "Commands take arguments and flags, for example ls -l.",
+            "The output of one command can be piped into another with |, and > redirects output to a file."
+          ] },
         { "id": "g-git", "name": "Git Basics", "skillId": "git", "estimatedMinutes": 60, "prerequisites": ["g-cli"],
-          "description": "Repositories, staging, commits, history and pushing to a remote." },
+          "description": "Repositories, staging, commits, history and pushing to a remote.",
+          "keyPoints": [
+            "git add stages changes; git commit records a snapshot of the staged changes with a message.",
+            "git status shows what changed; git log shows the history.",
+            "git push sends commits to a remote such as GitHub; git pull fetches and merges remote changes."
+          ] },
         { "id": "g-branch", "name": "Branching & Pull Requests", "skillId": "git", "estimatedMinutes": 45, "prerequisites": ["g-git"],
-          "description": "Branches, merging, resolving conflicts and reviewing code through pull requests." },
+          "description": "Branches, merging, resolving conflicts and reviewing code through pull requests.",
+          "keyPoints": [
+            "A branch is a movable pointer to a line of commits; create one with git switch -c name (or git checkout -b name).",
+            "Merging combines branches; a conflict happens when both changed the same lines and must be resolved by hand.",
+            "A pull request asks to merge a branch and lets teammates review the change first."
+          ] },
         { "id": "g-build", "name": "Maven & Gradle", "skillId": "git", "estimatedMinutes": 45, "prerequisites": ["g-cli", "j-basics"],
-          "description": "Build files, dependencies, the build lifecycle and running a Java project from the command line." },
+          "description": "Build files, dependencies, the build lifecycle and running a Java project from the command line.",
+          "keyPoints": [
+            "Maven uses pom.xml and Gradle uses build.gradle(.kts) to declare dependencies and build steps.",
+            "Dependencies are downloaded from repositories such as Maven Central by their coordinates: group, artifact and version.",
+            "Typical commands: mvn test and mvn package, or ./gradlew test and ./gradlew build."
+          ] },
 
         { "id": "s-intro", "name": "Relational Databases & SELECT", "skillId": "sql", "estimatedMinutes": 60, "prerequisites": [],
-          "description": "Tables, rows, primary keys and writing basic SELECT queries." },
+          "description": "Tables, rows, primary keys and writing basic SELECT queries.",
+          "keyPoints": [
+            "A table has columns and rows; a primary key uniquely identifies each row.",
+            "SELECT chooses columns and FROM chooses the table: SELECT name FROM students;",
+            "SELECT * returns all columns; in real code list only the columns you need."
+          ] },
         { "id": "s-filter", "name": "Filtering, Sorting & Aggregates", "skillId": "sql", "estimatedMinutes": 60, "prerequisites": ["s-intro"],
-          "description": "WHERE, ORDER BY, LIMIT, COUNT/SUM/AVG, GROUP BY and HAVING." },
+          "description": "WHERE, ORDER BY, LIMIT, COUNT/SUM/AVG, GROUP BY and HAVING.",
+          "keyPoints": [
+            "WHERE filters rows before grouping; HAVING filters groups after GROUP BY.",
+            "Aggregates (COUNT, SUM, AVG, MIN, MAX) collapse rows into one value per group.",
+            "ORDER BY sorts (ascending by default); LIMIT restricts the number of rows returned."
+          ] },
         { "id": "s-joins", "name": "Joins", "skillId": "sql", "estimatedMinutes": 75, "prerequisites": ["s-filter"],
-          "description": "Foreign keys, INNER and LEFT joins, joining several tables and subqueries." },
+          "description": "Foreign keys, INNER and LEFT joins, joining several tables and subqueries.",
+          "keyPoints": [
+            "A foreign key links a row to a row in another table.",
+            "INNER JOIN returns only matching rows; LEFT JOIN returns all rows from the left table, with NULLs where there is no match.",
+            "Always join on key columns (ON a.id = b.a_id); forgetting the condition creates a huge cross product."
+          ] },
         { "id": "s-dml", "name": "Modifying Data & Transactions", "skillId": "sql", "estimatedMinutes": 60, "prerequisites": ["s-filter"],
-          "description": "INSERT, UPDATE, DELETE, transactions, COMMIT/ROLLBACK and ACID properties." },
+          "description": "INSERT, UPDATE, DELETE, transactions, COMMIT/ROLLBACK and ACID properties.",
+          "keyPoints": [
+            "INSERT adds rows, UPDATE changes rows and DELETE removes rows; always use WHERE with UPDATE and DELETE.",
+            "A transaction groups statements: COMMIT saves them all, ROLLBACK undoes them all.",
+            "ACID stands for Atomicity, Consistency, Isolation and Durability."
+          ] },
         { "id": "s-design", "name": "Schema Design & Normalization", "skillId": "sql", "estimatedMinutes": 75, "prerequisites": ["s-joins"],
-          "description": "Modelling entities and relationships, one-to-many and many-to-many, normal forms." },
+          "description": "Modelling entities and relationships, one-to-many and many-to-many, normal forms.",
+          "keyPoints": [
+            "One-to-many is modelled with a foreign key on the 'many' side; many-to-many needs a join table.",
+            "First normal form: atomic values and no repeating groups. Second and third forms remove partial and transitive dependencies.",
+            "Normalization reduces duplication and update anomalies; denormalizing can help read speed."
+          ] },
         { "id": "s-index", "name": "Indexes & Query Performance", "skillId": "sql", "estimatedMinutes": 60, "prerequisites": ["s-joins"],
-          "description": "How indexes work, choosing indexes and reading a query plan." },
+          "description": "How indexes work, choosing indexes and reading a query plan.",
+          "keyPoints": [
+            "An index (often a B-tree) lets the database find rows without scanning the whole table.",
+            "Index columns used in WHERE, JOIN and ORDER BY; each index slows INSERT and UPDATE and uses space.",
+            "EXPLAIN shows the query plan, for example whether a full table scan or an index scan is used."
+          ] },
         { "id": "s-jdbc", "name": "JDBC", "skillId": "sql", "estimatedMinutes": 75, "prerequisites": ["s-dml", "j-collections", "j-exceptions"],
-          "description": "Connecting to a database from Java, PreparedStatement, ResultSet and mapping rows to objects." },
+          "description": "Connecting to a database from Java, PreparedStatement, ResultSet and mapping rows to objects.",
+          "keyPoints": [
+            "A Connection opens a session to the database; a Statement runs SQL; a ResultSet iterates over returned rows with next().",
+            "Use PreparedStatement with ? placeholders to prevent SQL injection instead of concatenating strings.",
+            "Close connections with try-with-resources and map each row to an object by reading columns by name."
+          ] },
 
         { "id": "w-http", "name": "HTTP Fundamentals", "skillId": "web", "estimatedMinutes": 45, "prerequisites": [],
-          "description": "Requests and responses, methods, status codes, headers and URLs." },
+          "description": "Requests and responses, methods, status codes, headers and URLs.",
+          "keyPoints": [
+            "A client sends a request (method, URL, headers, optional body); the server returns a response (status code, headers, body).",
+            "GET reads, POST creates, PUT replaces, PATCH changes part of a resource and DELETE removes it.",
+            "Status classes: 2xx success, 3xx redirect, 4xx client error, 5xx server error."
+          ] },
         { "id": "w-rest", "name": "REST API Design", "skillId": "web", "estimatedMinutes": 60, "prerequisites": ["w-http"],
-          "description": "Resources, endpoints, idempotency, status codes for APIs and versioning." },
+          "description": "Resources, endpoints, idempotency, status codes for APIs and versioning.",
+          "keyPoints": [
+            "REST models things as resources with nouns in URLs (/students/42) and uses HTTP methods as the actions.",
+            "GET, PUT and DELETE are idempotent: repeating the request leaves the same result; POST is not.",
+            "Use meaningful status codes: 201 Created, 204 No Content, 400 Bad Request, 404 Not Found."
+          ] },
         { "id": "w-json", "name": "JSON & Jackson", "skillId": "web", "estimatedMinutes": 45, "prerequisites": ["w-rest", "j-collections"],
-          "description": "JSON syntax and converting between JSON and Java objects with Jackson." },
+          "description": "JSON syntax and converting between JSON and Java objects with Jackson.",
+          "keyPoints": [
+            "JSON has objects {}, arrays [], strings, numbers, booleans and null; keys are double-quoted strings.",
+            "Jackson's ObjectMapper converts Java objects to JSON (writeValueAsString) and back (readValue).",
+            "Annotations such as @JsonProperty and @JsonIgnore customize field names and visibility."
+          ] },
 
         { "id": "sp-di", "name": "Spring Core & Dependency Injection", "skillId": "spring", "estimatedMinutes": 75, "prerequisites": ["j-interfaces", "g-build"],
-          "description": "Inversion of control, beans, the application context and constructor injection." },
+          "description": "Inversion of control, beans, the application context and constructor injection.",
+          "keyPoints": [
+            "Inversion of control: the Spring container creates objects (beans) and wires their dependencies for you.",
+            "Prefer constructor injection: dependencies are explicit, can be final and are easy to test.",
+            "@Component, @Service and @Repository mark classes as beans; @Bean in a @Configuration class defines beans in code."
+          ] },
         { "id": "sp-boot", "name": "Spring Boot Basics", "skillId": "spring", "estimatedMinutes": 75, "prerequisites": ["sp-di"],
-          "description": "Starters, auto-configuration, application.properties and running a Boot application." },
+          "description": "Starters, auto-configuration, application.properties and running a Boot application.",
+          "keyPoints": [
+            "Starters (for example spring-boot-starter-web) bring a set of compatible dependencies.",
+            "Auto-configuration configures beans based on the classpath and your properties.",
+            "@SpringBootApplication enables component scanning and auto-configuration; settings live in application.properties or application.yml."
+          ] },
         { "id": "sp-mvc", "name": "REST Controllers", "skillId": "spring", "estimatedMinutes": 90, "prerequisites": ["sp-boot", "w-rest", "w-json"],
-          "description": "@RestController, request mappings, path and query parameters, request bodies and responses." },
+          "description": "@RestController, request mappings, path and query parameters, request bodies and responses.",
+          "keyPoints": [
+            "@RestController combines @Controller and @ResponseBody, so return values become the response body (as JSON).",
+            "@GetMapping and @PostMapping map URLs; @PathVariable reads /students/{id}, @RequestParam reads ?name= and @RequestBody reads the JSON body.",
+            "ResponseEntity lets you control the status code and headers."
+          ] },
         { "id": "sp-data", "name": "Spring Data JPA", "skillId": "spring", "estimatedMinutes": 90, "prerequisites": ["sp-boot", "s-jdbc", "s-design"],
-          "description": "Entities, repositories, derived queries, relationships and transactions with JPA." },
+          "description": "Entities, repositories, derived queries, relationships and transactions with JPA.",
+          "keyPoints": [
+            "@Entity maps a class to a table and @Id marks the primary key.",
+            "A JpaRepository<T, ID> interface gives CRUD methods without writing implementations; derived queries such as findByEmail are generated from the method name.",
+            "@Transactional makes a method run in one transaction; lazy relationships load on first access."
+          ] },
         { "id": "sp-valid", "name": "Validation & Error Handling", "skillId": "spring", "estimatedMinutes": 60, "prerequisites": ["sp-mvc", "j-exceptions"],
-          "description": "Bean Validation annotations, @ControllerAdvice and consistent error responses." },
+          "description": "Bean Validation annotations, @ControllerAdvice and consistent error responses.",
+          "keyPoints": [
+            "Bean Validation annotations such as @NotBlank, @Size, @Email and @Min go on fields and are triggered by @Valid on the request body.",
+            "@ControllerAdvice with @ExceptionHandler centralizes error handling for all controllers.",
+            "Return a consistent error body (status, message, field errors) with a proper status such as 400 or 404."
+          ] },
         { "id": "sp-security", "name": "Spring Security Basics", "skillId": "spring", "estimatedMinutes": 90, "prerequisites": ["sp-mvc"],
-          "description": "Authentication vs authorization, password hashing and securing endpoints." },
+          "description": "Authentication vs authorization, password hashing and securing endpoints.",
+          "keyPoints": [
+            "Authentication verifies who you are; authorization decides what you may do.",
+            "Never store plain-text passwords; hash them with a slow, salted algorithm such as BCrypt.",
+            "A SecurityFilterChain bean configures which endpoints need authentication or specific roles."
+          ] },
 
         { "id": "t-junit", "name": "Unit Testing with JUnit 5", "skillId": "testing", "estimatedMinutes": 60, "prerequisites": ["j-oop", "g-build"],
-          "description": "Writing tests, assertions, test lifecycle and parameterized tests." },
+          "description": "Writing tests, assertions, test lifecycle and parameterized tests.",
+          "keyPoints": [
+            "A JUnit 5 test is a method annotated with @Test; it passes unless an assertion fails or an exception is thrown.",
+            "Common assertions: assertEquals(expected, actual), assertTrue and assertThrows.",
+            "@BeforeEach runs before every test; @ParameterizedTest runs one test with many inputs."
+          ] },
         { "id": "t-mockito", "name": "Mocking with Mockito", "skillId": "testing", "estimatedMinutes": 60, "prerequisites": ["t-junit", "j-interfaces"],
-          "description": "Mocks and stubs, verifying interactions and testing classes in isolation." },
+          "description": "Mocks and stubs, verifying interactions and testing classes in isolation.",
+          "keyPoints": [
+            "A mock replaces a real dependency so a class can be tested in isolation.",
+            "when(mock.method()).thenReturn(value) stubs behavior; verify(mock).method() checks that an interaction happened.",
+            "Mock collaborators such as repositories and clients, not the class under test or simple value objects."
+          ] },
         { "id": "t-spring", "name": "Testing Spring Boot Apps", "skillId": "testing", "estimatedMinutes": 75, "prerequisites": ["t-mockito", "sp-mvc"],
-          "description": "@SpringBootTest, MockMvc, test slices and testing REST endpoints." }
+          "description": "@SpringBootTest, MockMvc, test slices and testing REST endpoints.",
+          "keyPoints": [
+            "@SpringBootTest starts the full application context; it is slow, so use it sparingly.",
+            "MockMvc sends simulated HTTP requests to controllers; @WebMvcTest loads only the web layer and @DataJpaTest only the persistence layer.",
+            "Use @MockBean (or @MockitoBean in newer Spring versions) to replace beans in a test slice."
+          ] }
       ]
     },
     {
@@ -102,68 +277,213 @@
       ],
       "topics": [
         { "id": "d-bigo", "name": "Big-O Notation", "skillId": "complexity", "estimatedMinutes": 45, "prerequisites": [],
-          "description": "Time and space complexity, common growth rates and best/worst/average case." },
+          "description": "Time and space complexity, common growth rates and best/worst/average case.",
+          "keyPoints": [
+            "Big-O describes how running time or memory grows with the input size n, ignoring constant factors.",
+            "Common orders from fast to slow: O(1), O(log n), O(n), O(n log n), O(n^2), O(2^n).",
+            "Worst case is the usual default; best and average cases can differ (for example in quicksort)."
+          ] },
         { "id": "d-analysis", "name": "Analysing Loops & Recursion", "skillId": "complexity", "estimatedMinutes": 45, "prerequisites": ["d-bigo", "d-recursion"],
-          "description": "Counting operations in nested loops, recurrence relations and amortized cost." },
+          "description": "Counting operations in nested loops, recurrence relations and amortized cost.",
+          "keyPoints": [
+            "A single loop up to n is O(n); two nested loops each up to n are O(n^2).",
+            "A loop that halves or doubles its variable every step runs O(log n) times.",
+            "Amortized cost averages expensive rare operations over many cheap ones, for example appending to a dynamic array is O(1) amortized."
+          ] },
 
         { "id": "d-arrays", "name": "Arrays & Dynamic Arrays", "skillId": "linear", "estimatedMinutes": 45, "prerequisites": ["d-bigo"],
-          "description": "Indexing, insertion and deletion costs, and how dynamic arrays grow." },
+          "description": "Indexing, insertion and deletion costs, and how dynamic arrays grow.",
+          "keyPoints": [
+            "Arrays store elements contiguously, so access by index is O(1).",
+            "Inserting or deleting in the middle shifts elements, which costs O(n).",
+            "Dynamic arrays double their capacity when full, giving amortized O(1) appends."
+          ] },
         { "id": "d-strings", "name": "String Manipulation", "skillId": "linear", "estimatedMinutes": 45, "prerequisites": ["d-arrays"],
-          "description": "Character arrays, reversing, palindromes, anagrams and building strings efficiently." },
+          "description": "Character arrays, reversing, palindromes, anagrams and building strings efficiently.",
+          "keyPoints": [
+            "Strings are often immutable, so repeated concatenation in a loop costs O(n^2); use a builder or a list of characters.",
+            "A palindrome reads the same forwards and backwards; check it with two pointers from both ends.",
+            "Two strings are anagrams if their character counts match."
+          ] },
         { "id": "d-twopointers", "name": "Two Pointers & Sliding Window", "skillId": "linear", "estimatedMinutes": 60, "prerequisites": ["d-arrays"],
-          "description": "Solving pair, subarray and substring problems in linear time." },
+          "description": "Solving pair, subarray and substring problems in linear time.",
+          "keyPoints": [
+            "Two pointers walk an array from both ends or at different speeds, avoiding nested loops.",
+            "A sliding window keeps a range [left, right] and updates its sum or counts as it moves, giving O(n).",
+            "In a sorted array, move the left pointer up if the sum is too small and the right pointer down if it is too large."
+          ] },
         { "id": "d-prefix", "name": "Prefix Sums", "skillId": "linear", "estimatedMinutes": 30, "prerequisites": ["d-arrays"],
-          "description": "Precomputing running totals to answer range-sum queries in O(1)." },
+          "description": "Precomputing running totals to answer range-sum queries in O(1).",
+          "keyPoints": [
+            "prefix[i] stores the sum of the first i elements.",
+            "The sum of elements l..r is prefix[r + 1] - prefix[l], answered in O(1) after O(n) preprocessing.",
+            "The same idea works for counts, XOR and 2-D grids."
+          ] },
         { "id": "d-linkedlist", "name": "Linked Lists", "skillId": "linear", "estimatedMinutes": 60, "prerequisites": ["d-arrays"],
-          "description": "Singly and doubly linked lists, insertion, deletion, reversal and cycle detection." },
+          "description": "Singly and doubly linked lists, insertion, deletion, reversal and cycle detection.",
+          "keyPoints": [
+            "Each node holds a value and a pointer to the next node (and the previous node in a doubly linked list).",
+            "Inserting or deleting after a known node is O(1), but finding a node by index is O(n).",
+            "Floyd's cycle detection uses a slow and a fast pointer: if they meet, there is a cycle."
+          ] },
         { "id": "d-stack", "name": "Stacks", "skillId": "linear", "estimatedMinutes": 45, "prerequisites": ["d-linkedlist"],
-          "description": "LIFO operations, balanced brackets, expression evaluation and monotonic stacks." },
+          "description": "LIFO operations, balanced brackets, expression evaluation and monotonic stacks.",
+          "keyPoints": [
+            "A stack is last-in, first-out: push and pop at the top are both O(1).",
+            "Stacks check balanced brackets: push openers, and pop and match on closers.",
+            "A monotonic stack keeps elements in sorted order to find, for example, the next greater element in O(n)."
+          ] },
         { "id": "d-queue", "name": "Queues & Deques", "skillId": "linear", "estimatedMinutes": 45, "prerequisites": ["d-linkedlist"],
-          "description": "FIFO operations, circular buffers and double-ended queues." },
+          "description": "FIFO operations, circular buffers and double-ended queues.",
+          "keyPoints": [
+            "A queue is first-in, first-out: enqueue at the back and dequeue from the front.",
+            "A circular buffer reuses array slots with wrap-around indexes: (i + 1) % capacity.",
+            "A deque supports insertion and removal at both ends in O(1)."
+          ] },
         { "id": "d-hashing", "name": "Hash Tables", "skillId": "linear", "estimatedMinutes": 60, "prerequisites": ["d-arrays"],
-          "description": "Hash functions, collisions, hash maps and sets, and counting with maps." },
+          "description": "Hash functions, collisions, hash maps and sets, and counting with maps.",
+          "keyPoints": [
+            "A hash function maps a key to an array index; lookups, inserts and deletes are O(1) on average.",
+            "Collisions (two keys with the same index) are handled by chaining or open addressing.",
+            "Use a map to count frequencies or to find a complement (two-sum) in one pass."
+          ] },
 
         { "id": "d-recursion", "name": "Recursion Basics", "skillId": "sorting", "estimatedMinutes": 60, "prerequisites": ["d-bigo"],
-          "description": "Base and recursive cases, the call stack and thinking recursively." },
+          "description": "Base and recursive cases, the call stack and thinking recursively.",
+          "keyPoints": [
+            "Every recursive function needs a base case that stops and a recursive case that moves toward it.",
+            "Each call is pushed onto the call stack; a missing base case causes a stack overflow.",
+            "Solve the smallest case first, then assume the function already works for smaller inputs."
+          ] },
         { "id": "d-binsearch", "name": "Binary Search", "skillId": "sorting", "estimatedMinutes": 45, "prerequisites": ["d-arrays"],
-          "description": "Searching sorted data in O(log n) and binary search on the answer." },
+          "description": "Searching sorted data in O(log n) and binary search on the answer.",
+          "keyPoints": [
+            "Binary search needs sorted data and halves the search range each step: O(log n).",
+            "Compute the middle as lo + (hi - lo) / 2 to avoid integer overflow.",
+            "Binary search on the answer finds the smallest value that satisfies a monotonic condition."
+          ] },
         { "id": "d-sort-basic", "name": "Elementary Sorting", "skillId": "sorting", "estimatedMinutes": 45, "prerequisites": ["d-arrays"],
-          "description": "Bubble, selection and insertion sort, stability and in-place sorting." },
+          "description": "Bubble, selection and insertion sort, stability and in-place sorting.",
+          "keyPoints": [
+            "Bubble, selection and insertion sort are O(n^2) in the worst case.",
+            "Insertion sort is O(n) on nearly sorted data and is stable.",
+            "A stable sort keeps equal elements in their original order; an in-place sort uses O(1) extra space."
+          ] },
         { "id": "d-sort-adv", "name": "Merge Sort & Quicksort", "skillId": "sorting", "estimatedMinutes": 75, "prerequisites": ["d-sort-basic", "d-recursion"],
-          "description": "Divide and conquer, merging, partitioning and O(n log n) sorting." },
+          "description": "Divide and conquer, merging, partitioning and O(n log n) sorting.",
+          "keyPoints": [
+            "Merge sort splits the array, sorts the halves recursively and merges them: O(n log n) always, O(n) extra space, stable.",
+            "Quicksort partitions around a pivot: O(n log n) on average, O(n^2) in the worst case, and it sorts in place.",
+            "Both use divide and conquer."
+          ] },
         { "id": "d-backtracking", "name": "Backtracking", "skillId": "sorting", "estimatedMinutes": 75, "prerequisites": ["d-recursion"],
-          "description": "Generating subsets and permutations, pruning, and N-Queens style problems." },
+          "description": "Generating subsets and permutations, pruning, and N-Queens style problems.",
+          "keyPoints": [
+            "Backtracking builds a solution step by step and undoes (backtracks) a choice when it cannot lead to a solution.",
+            "The template is: choose, explore recursively, un-choose.",
+            "Pruning impossible branches early (for example attacked squares in N-Queens) saves time."
+          ] },
 
         { "id": "d-trees", "name": "Binary Trees & Traversals", "skillId": "trees", "estimatedMinutes": 60, "prerequisites": ["d-recursion", "d-queue"],
-          "description": "Tree terminology, pre/in/post-order traversal and level-order traversal." },
+          "description": "Tree terminology, pre/in/post-order traversal and level-order traversal.",
+          "keyPoints": [
+            "A binary tree node has at most two children; the top node is the root and nodes without children are leaves.",
+            "Pre-order visits root, left, right; in-order visits left, root, right; post-order visits left, right, root.",
+            "Level-order traversal uses a queue and visits nodes level by level."
+          ] },
         { "id": "d-bst", "name": "Binary Search Trees", "skillId": "trees", "estimatedMinutes": 60, "prerequisites": ["d-trees", "d-binsearch"],
-          "description": "BST property, search, insert, delete and in-order successor." },
+          "description": "BST property, search, insert, delete and in-order successor.",
+          "keyPoints": [
+            "In a BST every value in the left subtree is smaller and every value in the right subtree is larger than the node.",
+            "Search, insert and delete take O(h), where h is the height: O(log n) if balanced, O(n) if skewed.",
+            "In-order traversal of a BST visits the values in sorted order."
+          ] },
         { "id": "d-heap", "name": "Heaps & Priority Queues", "skillId": "trees", "estimatedMinutes": 60, "prerequisites": ["d-trees"],
-          "description": "Binary heaps, heapify, priority queues and top-k problems." },
+          "description": "Binary heaps, heapify, priority queues and top-k problems.",
+          "keyPoints": [
+            "A binary heap is a complete tree stored in an array where each parent is <= (min-heap) or >= (max-heap) its children.",
+            "Insert and remove-top are O(log n); peeking at the top is O(1); building a heap from n items is O(n).",
+            "A priority queue is usually a heap; keep a min-heap of size k to find the k largest elements."
+          ] },
         { "id": "d-trie", "name": "Tries", "skillId": "trees", "estimatedMinutes": 45, "prerequisites": ["d-trees", "d-strings"],
-          "description": "Prefix trees for word storage, prefix search and autocomplete." },
+          "description": "Prefix trees for word storage, prefix search and autocomplete.",
+          "keyPoints": [
+            "A trie stores strings character by character along paths from the root.",
+            "Insert, search and prefix checks cost O(L), where L is the word length, regardless of how many words are stored.",
+            "Tries power autocomplete and prefix search."
+          ] },
         { "id": "d-balanced", "name": "Balanced Search Trees", "skillId": "trees", "estimatedMinutes": 45, "prerequisites": ["d-bst"],
-          "description": "Why trees become unbalanced, rotations, and an overview of AVL and red-black trees." },
+          "description": "Why trees become unbalanced, rotations, and an overview of AVL and red-black trees.",
+          "keyPoints": [
+            "Inserting sorted data into a plain BST creates a skewed tree with O(n) operations.",
+            "Balanced trees (AVL, red-black) keep the height O(log n) using rotations.",
+            "AVL trees are more strictly balanced; red-black trees do fewer rotations and are used in, for example, Java's TreeMap."
+          ] },
 
         { "id": "d-graph-rep", "name": "Graph Representations", "skillId": "graphs", "estimatedMinutes": 45, "prerequisites": ["d-linkedlist", "d-hashing"],
-          "description": "Vertices and edges, directed vs undirected, adjacency lists and matrices." },
+          "description": "Vertices and edges, directed vs undirected, adjacency lists and matrices.",
+          "keyPoints": [
+            "A graph has vertices (nodes) and edges; edges may be directed or undirected and may carry weights.",
+            "An adjacency list stores each vertex's neighbours: O(V + E) space, good for sparse graphs.",
+            "An adjacency matrix uses O(V^2) space but checks whether an edge u-v exists in O(1)."
+          ] },
         { "id": "d-bfs-dfs", "name": "BFS & DFS", "skillId": "graphs", "estimatedMinutes": 75, "prerequisites": ["d-graph-rep", "d-queue", "d-stack", "d-recursion"],
-          "description": "Breadth-first and depth-first search, connected components and grid traversal." },
+          "description": "Breadth-first and depth-first search, connected components and grid traversal.",
+          "keyPoints": [
+            "BFS explores level by level using a queue; DFS goes deep first using recursion or a stack.",
+            "Both run in O(V + E) with an adjacency list and need a visited set to avoid looping.",
+            "BFS finds shortest paths in unweighted graphs; DFS is useful for connected components and cycle detection."
+          ] },
         { "id": "d-topo", "name": "Topological Sort", "skillId": "graphs", "estimatedMinutes": 45, "prerequisites": ["d-bfs-dfs"],
-          "description": "Ordering a DAG with Kahn's algorithm or DFS, and detecting cycles." },
+          "description": "Ordering a DAG with Kahn's algorithm or DFS, and detecting cycles.",
+          "keyPoints": [
+            "A topological order lists the vertices of a directed acyclic graph (DAG) so that every edge goes from an earlier to a later vertex.",
+            "Kahn's algorithm repeatedly removes vertices with in-degree 0 using a queue.",
+            "If not all vertices get removed, the graph contains a cycle."
+          ] },
         { "id": "d-shortest", "name": "Shortest Paths", "skillId": "graphs", "estimatedMinutes": 75, "prerequisites": ["d-bfs-dfs", "d-heap"],
-          "description": "BFS on unweighted graphs and Dijkstra's algorithm on weighted graphs." },
+          "description": "BFS on unweighted graphs and Dijkstra's algorithm on weighted graphs.",
+          "keyPoints": [
+            "BFS gives shortest paths when all edges have the same weight.",
+            "Dijkstra's algorithm uses a min-priority queue and repeatedly settles the closest unsettled vertex; it needs non-negative weights.",
+            "Dijkstra runs in O((V + E) log V) with a binary heap."
+          ] },
         { "id": "d-mst", "name": "Minimum Spanning Trees & Union-Find", "skillId": "graphs", "estimatedMinutes": 60, "prerequisites": ["d-graph-rep", "d-sort-adv"],
-          "description": "Disjoint-set union, Kruskal's and Prim's algorithms." },
+          "description": "Disjoint-set union, Kruskal's and Prim's algorithms.",
+          "keyPoints": [
+            "A minimum spanning tree connects all vertices of a weighted undirected graph with minimum total weight and no cycles.",
+            "Kruskal's algorithm sorts the edges and adds the cheapest edge that does not form a cycle, using union-find.",
+            "Union-find supports find and union in nearly O(1) with path compression and union by rank."
+          ] },
 
         { "id": "d-greedy", "name": "Greedy Algorithms", "skillId": "dp", "estimatedMinutes": 60, "prerequisites": ["d-sort-adv"],
-          "description": "Greedy choice, interval scheduling and when greedy fails." },
+          "description": "Greedy choice, interval scheduling and when greedy fails.",
+          "keyPoints": [
+            "A greedy algorithm makes the locally best choice at each step and never reconsiders.",
+            "Interval scheduling: sort by end time and pick each interval that starts after the last chosen one ends.",
+            "Greedy fails for problems such as coin change with arbitrary coin values; use dynamic programming there."
+          ] },
         { "id": "d-dp-intro", "name": "Introduction to Dynamic Programming", "skillId": "dp", "estimatedMinutes": 75, "prerequisites": ["d-recursion", "d-hashing"],
-          "description": "Overlapping subproblems, memoization and bottom-up tabulation." },
+          "description": "Overlapping subproblems, memoization and bottom-up tabulation.",
+          "keyPoints": [
+            "Dynamic programming applies when a problem has overlapping subproblems and optimal substructure.",
+            "Memoization is top-down: cache the results of recursive calls. Tabulation is bottom-up: fill a table in order.",
+            "Naive Fibonacci recursion is exponential; dynamic programming makes it O(n)."
+          ] },
         { "id": "d-dp-1d", "name": "1-D Dynamic Programming", "skillId": "dp", "estimatedMinutes": 60, "prerequisites": ["d-dp-intro"],
-          "description": "Climbing stairs, house robber, coin change and longest increasing subsequence." },
+          "description": "Climbing stairs, house robber, coin change and longest increasing subsequence.",
+          "keyPoints": [
+            "Define dp[i] clearly, for example the best answer using the first i items.",
+            "Climbing stairs: dp[i] = dp[i-1] + dp[i-2]. House robber: dp[i] = max(dp[i-1], dp[i-2] + nums[i]).",
+            "Coin change: dp[a] = 1 + min(dp[a - coin]) over the coins; the standard LIS dynamic program is O(n^2)."
+          ] },
         { "id": "d-dp-2d", "name": "2-D Dynamic Programming", "skillId": "dp", "estimatedMinutes": 75, "prerequisites": ["d-dp-1d"],
-          "description": "Grid paths, longest common subsequence, edit distance and 0/1 knapsack." }
+          "description": "Grid paths, longest common subsequence, edit distance and 0/1 knapsack.",
+          "keyPoints": [
+            "A 2-D table such as dp[i][j] often indexes prefixes of two strings or positions in a grid.",
+            "LCS: if the characters match, dp[i][j] = dp[i-1][j-1] + 1; otherwise max(dp[i-1][j], dp[i][j-1]).",
+            "0/1 knapsack: dp[i][w] = max(skip item i, take item i if it fits); edit distance takes the minimum of insert, delete and replace."
+          ] }
       ]
     }
   ]

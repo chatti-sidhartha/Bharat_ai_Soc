@@ -28,7 +28,7 @@ object CurriculumParser {
             name = name,
             skills = skills.map { Skill(it.id, it.name, it.targetLevel, it.weight) },
             graph = KnowledgeGraph(
-                topics = topics.map { Topic(it.id, it.name, it.skillId, it.estimatedMinutes, it.description) },
+                topics = topics.map { Topic(it.id, it.name, it.skillId, it.estimatedMinutes, it.description, it.keyPoints) },
                 prerequisites = topics.associate { it.id to it.prerequisites.toSet() },
             ),
         )
@@ -54,4 +54,5 @@ private data class TopicJson(
     val estimatedMinutes: Int,
     val prerequisites: List<String> = emptyList(),
     val description: String = "",
+    val keyPoints: List<String> = emptyList(),
 )

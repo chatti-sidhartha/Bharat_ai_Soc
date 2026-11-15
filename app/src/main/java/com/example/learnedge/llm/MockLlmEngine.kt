@@ -29,10 +29,14 @@ class MockLlmEngine(
         loadTimeMs = loadDelayMs
     }
 
-    override suspend fun generate(prompt: String, onToken: (String) -> Unit): GenerationStats =
+    /** Temperatures received so far (one per prompt), so tests can check what was asked. */
+    val temperatures: MutableList<Float> = java.util.Collections.synchronizedList(mutableListOf())
+
+    override suspend fun generate(prompt: String, temperature: Float, onToken: (String) -> Unit): GenerationStats =
         withContext(Dispatchers.Default) {
             stopRequested = false
             prompts += prompt
+            temperatures += temperature
             val reply = scriptedReplies.getOrNull(prompts.size - 1) ?: scriptedReplies.lastOrNull() ?: CANNED_REPLY
             val tracker = StatsTracker()
             delay(firstTokenDelayMs)

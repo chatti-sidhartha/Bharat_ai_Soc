@@ -57,7 +57,7 @@ class OllamaLlmEngine(
         Log.i(TAG, "Ollama model $model ready in $loadTimeMs ms")
     }
 
-    override suspend fun generate(prompt: String, onToken: (String) -> Unit): GenerationStats =
+    override suspend fun generate(prompt: String, temperature: Float, onToken: (String) -> Unit): GenerationStats =
         withContext(Dispatchers.IO) {
             stopRequested = false
             val tracker = StatsTracker()
@@ -68,7 +68,7 @@ class OllamaLlmEngine(
                 .put("stream", true)
                 .put("keep_alive", OllamaConfig.KEEP_ALIVE)
                 .put("options", JSONObject()
-                    .put("temperature", ModelConfig.TEMPERATURE.toDouble())
+                    .put("temperature", temperature.toDouble())
                     .put("num_ctx", ModelConfig.SEQ_LEN))
             try {
                 request("POST", "/api/generate", body.toString(), readTimeoutMs = 300_000) { stream ->

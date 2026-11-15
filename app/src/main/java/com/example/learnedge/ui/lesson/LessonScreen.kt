@@ -17,6 +17,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -34,17 +34,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.learnedge.appContainer
-import com.example.learnedge.data.lessons.LessonProgress
-import com.example.learnedge.llm.lessons.BundledLesson
-import com.example.learnedge.llm.lessons.Lesson
-import com.example.learnedge.llm.lessons.LessonInput
-import com.example.learnedge.llm.lessons.LessonSource
+import com.example.learnedge.data.content.Explanation
+import com.example.learnedge.data.content.ExplanationStatus
+import com.example.learnedge.domain.ContentSource
+import com.example.learnedge.domain.LevelBand
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 data class LessonUiState(
     val loading: Boolean = true,
@@ -54,11 +51,7 @@ data class LessonUiState(
     val keyPoints: List<String> = emptyList(),
     /** Hand-written questions waiting in the bank for the quiz. */
     val questionCount: Int = 0,
-    /** The AI lesson if one was written, otherwise the bundled text. */
-    val lesson: Lesson? = null,
-    /** Set while the model is writing this topic's lesson. */
-    val writing: LessonProgress? = null,
-    val input: LessonInput? = null,
+    val explanation: Explanation? = null,
 )
 
 class LessonViewModel(app: Application, savedStateHandle: SavedStateHandle) : AndroidViewModel(app) {
@@ -67,46 +60,24 @@ class LessonViewModel(app: Application, savedStateHandle: SavedStateHandle) : An
 
     val state: StateFlow<LessonUiState> = combine(
         container.profiles.observe(),
-        container.lessons.observe(topicId),
-        container.lessons.progress,
-    ) { profile, aiLesson, progress ->
+        container.content.getExplanation(topicId),
+    ) { profile, explanation ->
         if (profile == null) return@combine LessonUiState(loading = false)
         val track = container.curriculum.track(profile.trackId)
         val topic = track.graph.topic(topicId)
-        val content = container.content.content(topicId)
-        val input = LessonInput(
-            topicId = topicId,
-            topicName = topic.name,
-            skillName = track.skill(topic.skillId).name,
-            trackName = track.name,
-            description = topic.description,
-            keyPoints = content?.keyPoints.orEmpty(),
-        )
         LessonUiState(
             loading = false,
             topicName = topic.name,
-            skillName = input.skillName,
+            skillName = track.skill(topic.skillId).name,
             minutes = topic.estimatedMinutes,
-            keyPoints = input.keyPoints,
-            questionCount = content?.questions?.size ?: 0,
-            lesson = aiLesson ?: BundledLesson.build(input),
-            writing = progress.takeIf { it.topicId == topicId },
-            input = input,
+            keyPoints = topic.keyPoints,
+            questionCount = container.questionBank.count(topicId),
+            explanation = explanation,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LessonUiState())
 
-    init {
-        // The lesson is written in the background; the screen shows the bundled text meanwhile.
-        viewModelScope.launch {
-            val input = state.first { !it.loading }.input ?: return@launch
-            container.lessons.ensure(input)
-        }
-    }
-
-    /** Asks the model again, e.g. after the bundled text was used because the model failed. */
-    fun askAiAgain() {
-        state.value.input?.let { container.lessons.ensure(it, force = true) }
-    }
+    /** Asks the model for a fresh explanation at a higher temperature. */
+    fun explainDifferently() = container.content.explainDifferently(topicId)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +92,8 @@ fun LessonScreen(onBack: () -> Unit, viewModel: LessonViewModel = viewModel()) {
             )
         },
     ) { padding ->
-        if (state.loading) {
+        val explanation = state.explanation
+        if (state.loading || explanation == null) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             return@Scaffold
         }
@@ -132,17 +104,27 @@ fun LessonScreen(onBack: () -> Unit, viewModel: LessonViewModel = viewModel()) {
         ) {
             item {
                 Text(
-                    "${state.skillName} · ${state.minutes} min",
+                    "${state.skillName} · ${state.minutes} min · level: ${explanation.band.label()}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            state.lesson?.let { lesson -> item { LessonCard(lesson, state.writing, onAskAgain = viewModel::askAiAgain) } }
-            state.lesson?.example?.takeIf { it.isNotBlank() }?.let { example -> item { ExampleCard(example) } }
-            if (state.keyPoints.isNotEmpty()) item { KeyPointsCard(state.keyPoints) }
+            item { ExplanationCard(explanation) }
+            // The bundled explanation already is the key points, so they are only listed separately next to AI text.
+            if (explanation.source == ContentSource.AI && state.keyPoints.isNotEmpty()) item { KeyPointsCard(state.keyPoints) }
+            item {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = viewModel::explainDifferently,
+                        enabled = explanation.status == ExplanationStatus.READY,
+                    ) { Text("Explain it differently") }
+                    // The quiz arrives in the next milestone.
+                    Button(onClick = {}, enabled = false) { Text("Take quiz") }
+                }
+            }
             item {
                 Text(
-                    if (state.questionCount > 0) "Question bank: ${state.questionCount} practice questions ready." else "No practice questions for this topic yet.",
+                    if (state.questionCount > 0) "Question bank: ${state.questionCount} questions ready for the quiz." else "No quiz questions for this topic yet.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -151,40 +133,38 @@ fun LessonScreen(onBack: () -> Unit, viewModel: LessonViewModel = viewModel()) {
     }
 }
 
+private fun LevelBand.label() = name.lowercase()
+
 @Composable
-private fun LessonCard(lesson: Lesson, writing: LessonProgress?, onAskAgain: () -> Unit) {
+private fun ExplanationCard(explanation: Explanation) {
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Lesson", style = MaterialTheme.typography.titleSmall)
-                SourceLabel(if (lesson.source == LessonSource.AI) "AI" else "Bundled", highlighted = lesson.source == LessonSource.AI)
+                Text("Explanation", style = MaterialTheme.typography.titleSmall)
+                val ai = explanation.source == ContentSource.AI
+                SourceLabel(if (ai) "AI" else "Bundled", highlighted = ai)
             }
-            Text(lesson.explanation, style = MaterialTheme.typography.bodyMedium)
-            when {
-                writing != null -> {
+            Text(explanation.text, style = MaterialTheme.typography.bodyMedium)
+            when (explanation.status) {
+                ExplanationStatus.WAITING_FOR_MODEL -> {
+                    Text("Waiting for the on-device model…", style = MaterialTheme.typography.bodySmall)
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
+                ExplanationStatus.WRITING -> {
                     Text(
-                        if (writing.waitingForModel) {
-                            "Waiting for the on-device model…"
-                        } else {
-                            "AI is writing this lesson · attempt ${writing.attempt} of ${writing.maxAttempts} · ${writing.streamedChars} characters"
-                        },
+                        "AI is writing · attempt ${explanation.attempt} of ${explanation.maxAttempts}",
                         style = MaterialTheme.typography.bodySmall,
                     )
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
-                lesson.source == LessonSource.BUNDLED ->
-                    Button(onClick = onAskAgain) { Text("Ask the AI to write this lesson") }
+                ExplanationStatus.READY -> explanation.lastFailure?.let {
+                    Text(
+                        "The AI text was rejected ($it), so the hand-written key points are shown.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun ExampleCard(example: String) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Example", style = MaterialTheme.typography.titleSmall)
-            Text(example, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
         }
     }
 }

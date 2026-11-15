@@ -138,3 +138,17 @@ M1 Lessons + question bank -> M2 Topic quiz + BKT loop -> M3 Progress, knowledge
 Submission deadline: 23 Nov 2026 (confirmed by the user). The feature freeze of 25 Nov in standing
 order 8 falls after that date, so the user is finishing the milestones as fast as possible instead of
 one per day; the freeze date has not been revised by the user.
+
+### M1 status (15 Nov 2026): done
+- `curriculum.json` topics carry 3 `keyPoints`; `question_bank.json` has 192 hand-written questions
+  (3 per topic, difficulty 1-3 assigned by a text heuristic, not by testing students).
+- Explanations are plain text (40-200 words), written by the on-device model from the key points,
+  the learner's mastered prerequisites, what the topic unlocks and a level band from P(L)
+  (<0.3 beginner, <0.7 intermediate, else revision). Validated, 2 retries, then the bundled key points.
+- Room v6: `generated_content` (topicId, kind, payload, source, levelBand, promptVersion, modelId,
+  verified, createdAt) replaced `topic_lessons`. `ContentRepository.getExplanation(topicId)`.
+- `LlmEngine.generate(prompt, temperature, onToken)`: ExecuTorch takes temperature per call.
+- Debug hook: create `files/force_validation_failure` on the phone (debug build only) to force every
+  validation to fail and show the bundled fallback.
+- Known limits: the validator checks form, not accuracy (a poor analogy passes); the correct option is
+  strictly the longest in 46% of bank questions (ratchet test, target <= 35%).

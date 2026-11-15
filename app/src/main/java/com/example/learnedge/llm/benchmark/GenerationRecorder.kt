@@ -3,6 +3,7 @@ package com.example.learnedge.llm.benchmark
 import android.content.Context
 import com.example.learnedge.llm.GenerationStats
 import com.example.learnedge.llm.LlmEngine
+import com.example.learnedge.llm.ModelConfig
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -18,11 +19,12 @@ class GenerationRecorder(context: Context, private val log: BenchmarkLog) {
         promptLabel: String,
         run: Int,
         prompt: String,
+        temperature: Float = ModelConfig.TEMPERATURE,
         onToken: (String) -> Unit,
     ): MeasuredGeneration {
         val tempStart = DeviceMetrics.batteryTempC(appContext)
         val sampler = PeakPssSampler()
-        val stats = sampler.measure { engine.generate(prompt, onToken) }
+        val stats = sampler.measure { engine.generate(prompt, temperature, onToken) }
         val record = BenchmarkRecord(
             timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()),
             engine = engine.name,
