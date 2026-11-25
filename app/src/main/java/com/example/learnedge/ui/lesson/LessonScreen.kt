@@ -1,6 +1,7 @@
 package com.example.learnedge.ui.lesson
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class LessonUiState(
     val loading: Boolean = true,
@@ -75,6 +77,36 @@ class LessonViewModel(app: Application, savedStateHandle: SavedStateHandle) : An
             explanation = explanation,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LessonUiState())
+
+    private val openedAt = SystemClock.elapsedRealtime()
+
+    init {
+        // For the "prepared vs live" measurement: how long until the explanation was readable and complete.
+        viewModelScope.launch {
+            var sawGeneration = false
+            var firstTextMs: Long? = null
+            var logged = false
+            state.collect { s ->
+                val explanation = s.explanation ?: return@collect
+                val elapsed = SystemClock.elapsedRealtime() - openedAt
+                if (explanation.status != ExplanationStatus.READY) {
+                    sawGeneration = true
+                    if (firstTextMs == null && explanation.status == ExplanationStatus.WRITING) firstTextMs = elapsed
+                } else if (!logged) {
+                    // When a generation ends, the live state clears a moment before the saved row arrives, which
+                    // shows up as one "ready, bundled" frame. A real fallback always carries a failure reason.
+                    if (sawGeneration && explanation.source != ContentSource.AI && explanation.lastFailure == null) return@collect
+                    logged = true
+                    val kind = when {
+                        explanation.source != ContentSource.AI -> "bundled"
+                        sawGeneration -> "live"
+                        else -> "cached"
+                    }
+                    container.lessonOpenLog.append(topicId, kind, firstTextMs ?: elapsed, elapsed)
+                }
+            }
+        }
+    }
 
     /** Asks the model for a fresh explanation at a higher temperature. */
     fun explainDifferently() = container.content.explainDifferently(topicId)

@@ -38,15 +38,22 @@ data class GeneratedContentEntity(
 interface GeneratedContentDao {
     @Query(
         "SELECT * FROM generated_content WHERE topicId = :topicId AND kind = :kind AND levelBand = :levelBand " +
-            "AND verified = 1 AND source = 'AI' ORDER BY createdAt DESC, id DESC LIMIT 1",
+            "AND promptVersion = :promptVersion AND verified = 1 AND source = 'AI' ORDER BY createdAt DESC, id DESC LIMIT 1",
     )
-    fun observeLatestVerifiedAi(topicId: String, kind: String, levelBand: String): Flow<GeneratedContentEntity?>
+    fun observeLatestVerifiedAi(topicId: String, kind: String, levelBand: String, promptVersion: Int): Flow<GeneratedContentEntity?>
 
     @Query(
         "SELECT * FROM generated_content WHERE topicId = :topicId AND kind = :kind AND levelBand = :levelBand " +
-            "AND verified = 1 AND source = 'AI' ORDER BY createdAt DESC, id DESC LIMIT 1",
+            "AND promptVersion = :promptVersion AND verified = 1 AND source = 'AI' ORDER BY createdAt DESC, id DESC LIMIT 1",
     )
-    suspend fun latestVerifiedAi(topicId: String, kind: String, levelBand: String): GeneratedContentEntity?
+    suspend fun latestVerifiedAi(topicId: String, kind: String, levelBand: String, promptVersion: Int): GeneratedContentEntity?
+
+    /** Every valid AI row of one kind written by the current prompt version, for the preparation planner and the "ready" count. */
+    @Query("SELECT * FROM generated_content WHERE kind = :kind AND promptVersion = :promptVersion AND verified = 1 AND source = 'AI'")
+    suspend fun verifiedAiRows(kind: String, promptVersion: Int): List<GeneratedContentEntity>
+
+    @Query("SELECT * FROM generated_content WHERE kind = :kind AND promptVersion = :promptVersion AND verified = 1 AND source = 'AI'")
+    fun observeVerifiedAiRows(kind: String, promptVersion: Int): Flow<List<GeneratedContentEntity>>
 
     @Insert suspend fun insert(row: GeneratedContentEntity): Long
 }

@@ -1,6 +1,10 @@
 package com.example.learnedge.data.tips
 
+import android.os.SystemClock
 import android.util.Log
+import com.example.learnedge.data.content.PrepOutcome
+import com.example.learnedge.data.content.PrepResult
+import com.example.learnedge.data.content.PreemptedException
 import com.example.learnedge.data.db.AppDatabase
 import com.example.learnedge.data.db.DailyTipEntity
 import com.example.learnedge.llm.LlmException
@@ -105,6 +109,54 @@ class TipsRepository(
             dao.replaceDay(input.date.toEpochDay(), result.tips.toRows(input))
         } finally {
             _progress.value = TipsProgress()
+        }
+    }
+
+    /** True if valid tips are stored for exactly this input (same day, same topics and minutes). */
+    suspend fun isStored(input: TipInput): Boolean = dao.getDay(input.date.toEpochDay()).firstOrNull()?.signature == input.signature
+
+    /**
+     * Writes and stores a day's tips ahead of time (Night Shift, "Prepare now") without touching the live
+     * progress shown on Today. A [background] item gives way at once when the learner asks for the model.
+     */
+    suspend fun prepare(input: TipInput, background: Boolean, maxChars: Int): PrepOutcome {
+        if (isStored(input)) return PrepOutcome(PrepResult.ALREADY_READY, 0, 0.0)
+        val startedAt = SystemClock.elapsedRealtime()
+        var tokens = 0
+        fun seconds() = (SystemClock.elapsedRealtime() - startedAt) / 1000.0
+        val model: (suspend (String, Int) -> String)? = if (llm.awaitReady()) {
+            { prompt, attempt ->
+                llm.withEngine(background) { engine ->
+                    val text = StringBuilder()
+                    val json = JsonCompletionDetector()
+                    var stopRequested = false
+                    val measured = recorder.generate(engine, TIPS_LABEL, attempt, prompt) { token ->
+                        text.append(token)
+                        if (!stopRequested && (json.feed(token) || text.length > maxChars * 2 || (background && llm.foregroundPending))) {
+                            stopRequested = true
+                            engine.stop()
+                        }
+                    }
+                    tokens += measured.stats.tokenCount
+                    if (background && llm.foregroundPending) throw PreemptedException()
+                    text.toString()
+                } ?: throw LlmException("No model is ready")
+            }
+        } else {
+            null
+        }
+        val result = try {
+            TipGenerator(MAX_RETRIES).generate(input, model)
+        } catch (e: PreemptedException) {
+            return PrepOutcome(PrepResult.PREEMPTED, tokens, seconds())
+        }
+        return when {
+            result.tips.summarySource == TipSource.AI -> {
+                dao.replaceDay(input.date.toEpochDay(), result.tips.toRows(input))
+                PrepOutcome(PrepResult.SAVED, tokens, seconds())
+            }
+            result.modelCalls == 0 -> PrepOutcome(PrepResult.NO_MODEL, tokens, seconds())
+            else -> PrepOutcome(PrepResult.FAILED_VALIDATION, tokens, seconds())
         }
     }
 

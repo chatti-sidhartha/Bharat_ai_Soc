@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.learnedge.appContainer
+import com.example.learnedge.data.nightshift.NightShiftProgress
+import com.example.learnedge.data.nightshift.PreparedSummary
 import com.example.learnedge.data.tips.TipsProgress
 import com.example.learnedge.domain.PlanReasons
 import com.example.learnedge.domain.SkillGaps
@@ -38,6 +40,12 @@ data class TodayUiState(
     val totalMinutes: Int get() = items.sumOf { it.minutes }
     val doneMinutes: Int get() = items.filter { it.done }.sumOf { it.minutes }
 }
+
+data class NightUi(
+    val summary: PreparedSummary = PreparedSummary(),
+    val progress: NightShiftProgress = NightShiftProgress(),
+    val enabled: Boolean = true,
+)
 
 class TodayViewModel(app: Application) : AndroidViewModel(app) {
     private val container = app.appContainer
@@ -100,6 +108,21 @@ class TodayViewModel(app: Application) : AndroidViewModel(app) {
                 .collect { container.tips.ensure(it) }
         }
     }
+
+    /** The "Prepared for you" card: how much of the next two plan days is ready, the live progress of a run, and the switch. */
+    val night: StateFlow<NightUi> = combine(
+        container.nightShift.summary(),
+        container.nightShift.progress,
+        container.nightShift.prefs.enabled,
+    ) { summary, progress, enabled -> NightUi(summary, progress, enabled) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NightUi())
+
+    /** The same pipeline as Night Shift, run now in the foreground. It runs in the app scope, so leaving the screen does not stop it. */
+    fun prepareNow() {
+        container.appScope.launch { container.nightShift.run(foreground = true) }
+    }
+
+    fun setNightShift(enabled: Boolean) = container.nightShift.setEnabled(enabled)
 
     fun setDone(itemId: Long, done: Boolean) {
         viewModelScope.launch { container.plans.setDone(itemId, done) }

@@ -10,9 +10,16 @@ import com.example.learnedge.data.db.AppDatabase
 import com.example.learnedge.data.diagnostic.DiagnosticRepository
 import com.example.learnedge.data.learner.LearnerStateRepository
 import com.example.learnedge.data.plan.PlanRepository
+import com.example.learnedge.data.nightshift.DeviceSensors
+import com.example.learnedge.data.nightshift.LessonOpenLog
+import com.example.learnedge.data.nightshift.NightShiftLog
+import com.example.learnedge.data.nightshift.NightShiftPrefs
+import com.example.learnedge.data.nightshift.NightShiftRepository
+import com.example.learnedge.data.nightshift.NightShiftScheduler
 import com.example.learnedge.data.profile.ProfileRepository
 import com.example.learnedge.data.quiz.QuizRepository
 import com.example.learnedge.data.tips.TipsRepository
+import com.example.learnedge.domain.ThermalGovernor
 import com.example.learnedge.llm.LlmService
 import com.example.learnedge.llm.benchmark.BenchmarkLog
 import com.example.learnedge.llm.benchmark.GenerationRecorder
@@ -30,6 +37,7 @@ class LearnEdgeApp : Application() {
         super.onCreate()
         container = AppContainer(this)
         container.appScope.launch { container.curriculum.seedIfEmpty() }
+        if (container.nightShift.prefs.enabled.value) NightShiftScheduler.ensureScheduled(this)
     }
 }
 
@@ -52,6 +60,10 @@ class AppContainer(context: Context) {
     /** The trusted, hand-written question bank (used by the quiz; the LLM never writes questions). */
     val questionBank = QuestionBankRepository(context.assets)
 
+    /** Real phone readings and the thermal policy (all thresholds are in GovernorConfig). */
+    val sensors = DeviceSensors(context)
+    val governor = ThermalGovernor()
+
     /**
      * Explanations: cached AI text, live generation, or the bundled key points. The flag file lets a
      * debug build force every validation to fail, to show the fallback on the phone.
@@ -62,10 +74,20 @@ class AppContainer(context: Context) {
             val debuggable = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
             debuggable && File(context.getExternalFilesDir(null), FORCE_INVALID_FLAG_FILE).exists()
         },
+        foregroundPolicy = { governor.foreground(sensors.read()) },
     )
 
     /** Quiz answers -> mastery (one BKT update each) -> plan rebuilt from tomorrow. */
     val quiz = QuizRepository(database, questionBank, learnerState, plans)
+
+    /** Night Shift: prepares upcoming lessons while the phone charges (and on "Prepare now"). */
+    val nightShift = NightShiftRepository(
+        context.applicationContext, curriculum, profiles, learnerState, plans, content, tips, llm,
+        sensors, governor, NightShiftLog(context), NightShiftPrefs(context),
+    )
+
+    /** Times how long lessons take to open (lesson_open.csv). */
+    val lessonOpenLog = LessonOpenLog(context)
 
     private companion object {
         const val FORCE_INVALID_FLAG_FILE = "force_validation_failure"

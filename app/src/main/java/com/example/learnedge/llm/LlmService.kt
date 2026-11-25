@@ -1,6 +1,7 @@
 package com.example.learnedge.llm
 
 import android.content.Context
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -76,15 +77,38 @@ class LlmService(private val context: Context, private val scope: CoroutineScope
     /** Waits until loading has finished; true if an engine is ready to generate. */
     suspend fun awaitReady(): Boolean = state.first { it.status != EngineStatus.Loading }.status == EngineStatus.Ready
 
+    private val foregroundWaiters = AtomicInteger(0)
+    @Volatile private var backgroundRunning = false
+
+    /** True while a request from the learner is waiting for (or using) the model: background work must stop at once. */
+    val foregroundPending: Boolean get() = foregroundWaiters.get() > 0
+
     /**
      * Runs [block] with exclusive use of the ready engine. Returns null when no engine is ready.
      * Other callers wait, so chat, tips and benchmarks never generate at the same time.
+     *
+     * A request with [background] = false comes from the learner. It stops a background generation that
+     * is running right now, so the learner never waits for Night Shift; background blocks must also
+     * check [foregroundPending] while they stream and end their output early.
      */
-    suspend fun <T> withEngine(block: suspend (LlmEngine) -> T): T? {
+    suspend fun <T> withEngine(background: Boolean = false, block: suspend (LlmEngine) -> T): T? {
         if (!awaitReady()) return null
-        return generationLock.withLock {
-            val current = engine?.takeIf { state.value.status == EngineStatus.Ready } ?: return@withLock null
-            block(current)
+        if (!background) {
+            foregroundWaiters.incrementAndGet()
+            if (backgroundRunning) engine?.stop()
+        }
+        try {
+            return generationLock.withLock {
+                val current = engine?.takeIf { state.value.status == EngineStatus.Ready } ?: return@withLock null
+                if (background) backgroundRunning = true
+                try {
+                    block(current)
+                } finally {
+                    if (background) backgroundRunning = false
+                }
+            }
+        } finally {
+            if (!background) foregroundWaiters.decrementAndGet()
         }
     }
 
